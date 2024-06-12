@@ -7,7 +7,7 @@
     "plugins": [
       "expo-router"
     ],
-    "name": "mind-break",
-    "slug": "mind-break"
+    "name": "mindbreak",
+    "slug": "mindbreak"
   }
 }
