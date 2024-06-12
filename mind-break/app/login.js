@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -6,11 +7,28 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
 
 export default function Login() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    const storedUsername = await AsyncStorage.getItem("username");
+    const storedPassword = await AsyncStorage.getItem("password");
+
+    if (username === storedUsername && password === storedPassword) {
+      router.push("/home");
+    } else {
+      Alert.alert(
+        "Invalid credentials",
+        "Please enter correct username and password"
+      );
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -25,12 +43,16 @@ export default function Login() {
           placeholder="Username"
           style={styles.input}
           placeholderTextColor="#bbb"
+          value={username}
+          onChangeText={setUsername}
         />
         <TextInput
           placeholder="Password"
           style={styles.input}
           placeholderTextColor="#bbb"
-          secureTextEntry={true}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
       </View>
       <Text style={styles.forgotPassword}>Forgot Password?</Text>
@@ -41,7 +63,7 @@ export default function Login() {
         >
           <Text style={styles.createAccountText}>Create account</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.loginButton}>
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
           <Text style={styles.loginText}>Log in</Text>
         </TouchableOpacity>
       </View>
