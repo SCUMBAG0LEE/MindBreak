@@ -24,6 +24,12 @@ export default function Profile({ navigation }) {
     router.push("/login"); // navigate to login screen
   };
 
+  const handleDeleteAccount = async () => {
+    await AsyncStorage.removeItem("username");
+    await AsyncStorage.removeItem("password");
+    router.push("/login"); // navigate to login screen
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.profileInfo}>
@@ -36,9 +42,16 @@ export default function Profile({ navigation }) {
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={handleDeleteAccount}
+      >
+        <Text style={styles.deleteText}>Delete Account</Text>
+      </TouchableOpacity>
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -67,7 +80,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 20,
   },
+  deleteButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
   logoutText: {
+    color: "white",
+  },
+  deleteText: {
     color: "white",
   },
 });
