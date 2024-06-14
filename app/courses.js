@@ -3,13 +3,73 @@ import {
   View,
   Text,
   Image,
-  TouchableOpacity,
   TextInput,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import styled from "styled-components/native";
+import Navbar from "./navbar";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const Container = styled.View`
+export default function Courses() {
+  return (
+    <SafeAreaContainer>
+      <StatusBar barStyle="light-content" />
+      <Header>
+        <Title>Courses</Title>
+        <ProfileImage source={require("../assets/images/profile.png")} />
+      </Header>
+      <SearchContainer>
+        <SearchInput placeholder="Find Course" placeholderTextColor="#bbb" />
+        <SearchIcon source={require("../assets/images/search.png")} />
+      </SearchContainer>
+      <ScrollView>
+        <Section>
+          <SectionTitle>Recommended</SectionTitle>
+          <CoursesList>
+            <CourseCard>
+              <CourseImage source={require("../assets/images/language.png")} />
+              <CourseText>Language Quiz</CourseText>
+            </CourseCard>
+            <CourseCard>
+              <CourseImage source={require("../assets/images/painting.png")} />
+              <CourseText>Art Quiz</CourseText>
+            </CourseCard>
+          </CoursesList>
+        </Section>
+        <Section>
+          <SectionTitle>Popular</SectionTitle>
+          <CoursesList>
+            <CourseCard>
+              <CourseImage source={require("../assets/images/science.png")} />
+              <CourseText>Science Quiz</CourseText>
+            </CourseCard>
+            <CourseCard>
+              <CourseImage source={require("../assets/images/math.png")} />
+              <CourseText>Math Quiz</CourseText>
+            </CourseCard>
+          </CoursesList>
+        </Section>
+        <Section>
+          <SectionTitle>New</SectionTitle>
+          <CoursesList>
+            <CourseCard>
+              <CourseImage source={require("../assets/images/history.png")} />
+              <CourseText>History Quiz</CourseText>
+            </CourseCard>
+            <CourseCard>
+              <CourseImage source={require("../assets/images/geography.png")} />
+              <CourseText>Geography Quiz</CourseText>
+            </CourseCard>
+          </CoursesList>
+        </Section>
+      </ScrollView>
+      <Navbar />
+    </SafeAreaContainer>
+  );
+}
+
+const SafeAreaContainer = styled(SafeAreaView)`
   flex: 1;
   background-color: #2d046e;
   padding: 20px;
@@ -53,11 +113,11 @@ const SearchIcon = styled.Image`
   height: 20px;
 `;
 
-const RecommendedSection = styled.View`
+const Section = styled.View`
   margin-bottom: 20px;
 `;
 
-const RecommendedTitle = styled.Text`
+const SectionTitle = styled.Text`
   color: white;
   font-size: 18px;
   margin-bottom: 10px;
@@ -66,6 +126,7 @@ const RecommendedTitle = styled.Text`
 const CoursesList = styled.View`
   flex-direction: row;
   justify-content: space-around;
+  flex-wrap: wrap;
 `;
 
 const CourseCard = styled.View`
@@ -73,6 +134,8 @@ const CourseCard = styled.View`
   padding: 20px;
   border-radius: 10px;
   align-items: center;
+  width: 45%;
+  margin-bottom: 20px;
 `;
 
 const CourseImage = styled.Image`
@@ -83,59 +146,5 @@ const CourseImage = styled.Image`
 
 const CourseText = styled.Text`
   color: white;
+  text-align: center;
 `;
-
-const Footer = styled.View`
-  flex-direction: row;
-  justify-content: space-around;
-  padding: 10px 0;
-  background-color: #3a2873;
-`;
-
-const FooterButton = styled.TouchableOpacity`
-  align-items: center;
-`;
-
-const FooterIcon = styled.Image`
-  width: 30px;
-  height: 30px;
-`;
-
-export default function Courses() {
-  return (
-    <Container>
-      <Header>
-        <Title>Courses</Title>
-        <ProfileImage source={require("../assets/images/profile.png")} />
-      </Header>
-      <SearchContainer>
-        <SearchInput placeholder="Find Course" placeholderTextColor="#bbb" />
-        <SearchIcon source={require("../assets/images/search.png")} />
-      </SearchContainer>
-      <RecommendedSection>
-        <RecommendedTitle>Recommended</RecommendedTitle>
-        <CoursesList>
-          <CourseCard>
-            <CourseImage source={require("../assets/images/language.png")} />
-            <CourseText>Language</CourseText>
-          </CourseCard>
-          <CourseCard>
-            <CourseImage source={require("../assets/images/painting.png")} />
-            <CourseText>Painting</CourseText>
-          </CourseCard>
-        </CoursesList>
-      </RecommendedSection>
-      <Footer>
-        <FooterButton>
-          <FooterIcon source={require("../assets/images/home.png")} />
-        </FooterButton>
-        <FooterButton>
-          <FooterIcon source={require("../assets/images/course.png")} />
-        </FooterButton>
-        <FooterButton>
-          <FooterIcon source={require("../assets/images/other.png")} />
-        </FooterButton>
-      </Footer>
-    </Container>
-  );
-}

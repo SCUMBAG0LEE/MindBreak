@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2d046e",
     alignItems: "center",
+    justifyContent: "center",
     padding: 20,
   },
   backButton: {
@@ -93,17 +94,18 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    marginVertical: 40,
+    marginBottom: 20,
   },
   title: {
     color: "white",
     fontSize: 32,
     fontWeight: "bold",
+    marginBottom: 10,
   },
   subtitle: {
     color: "#bbb",
     fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   inputContainer: {
     width: "100%",
