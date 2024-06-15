@@ -1,32 +1,20 @@
-import React, { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const auth = getAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    const storedUsername = await AsyncStorage.getItem("username");
-    const storedPassword = await AsyncStorage.getItem("password");
-
-    if (username === storedUsername && password === storedPassword) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/home");
-    } else {
-      Alert.alert(
-        "Invalid credentials",
-        "Please enter correct username and password"
-      );
+    } catch (error) {
+      Alert.alert("Error", "Invalid email or password");
     }
   };
 
@@ -40,11 +28,11 @@ export default function Login() {
       <Text style={styles.subtitle}>Welcome back!</Text>
       <View style={styles.inputContainer}>
         <TextInput
-          placeholder="Username"
+          placeholder="Email"
           style={styles.input}
           placeholderTextColor="#bbb"
-          value={username}
-          onChangeText={setUsername}
+          value={email}
+          onChangeText={setEmail}
         />
         <TextInput
           placeholder="Password"

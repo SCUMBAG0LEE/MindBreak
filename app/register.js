@@ -1,28 +1,29 @@
 import React, { useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Alert,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Register() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const auth = getAuth();
+
   const handleRegister = async () => {
-    if (username && email && password) {
-      await AsyncStorage.setItem("username", username);
-      await AsyncStorage.setItem("password", password);
-      Alert.alert("Registration successful", "You can now log in");
-      router.push("/login");
+    if (email && password) {
+      try {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
+        Alert.alert("Registration successful", "You can now log in");
+        router.push("/login");
+      } catch (error) {
+        Alert.alert("Error", error.message);
+      }
     } else {
       Alert.alert("Invalid input", "Please fill all the fields");
     }
@@ -43,13 +44,6 @@ export default function Register() {
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Good to have you join us!</Text>
       <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Username"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          value={username}
-          onChangeText={setUsername}
-        />
         <TextInput
           placeholder="Email"
           style={styles.input}
