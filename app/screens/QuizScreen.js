@@ -18,6 +18,8 @@ const QuizScreen = () => {
   const [correctAnswerIndex, setCorrectAnswerIndex] = useState(1); // Index of the correct answer
   const [timeLeft, setTimeLeft] = useState(60);
   const [progress, setProgress] = useState(0.5);
+  const [showNextButton, setShowNextButton] = useState(false); // State to show Next button
+  const [confirmClicked, setConfirmClicked] = useState(false); // State to track if Confirm button clicked
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -74,8 +76,10 @@ const QuizScreen = () => {
         }
       });
 
-      // Update state with new answers array
+      // Update state with new answers array and show Next button
       setAnswers(updatedAnswers);
+      setShowNextButton(true);
+      setConfirmClicked(true); // Set confirm button clicked
     }
   };
 
@@ -83,9 +87,29 @@ const QuizScreen = () => {
     // Handle skipping the question
   };
 
+  const handleNext = () => {
+    // Reset answers to default styles
+    const defaultAnswers = ["London", "Paris", "Berlin", "Madrid"];
+    const resetAnswers = defaultAnswers.map(answer => ({
+      text: answer,
+      bgColor: '#422B83',
+      textColor: '#FFFFFF'
+    }));
+
+    setAnswers(resetAnswers);
+
+    // Logic to move to the next question
+    // For demonstration, reset states or fetch next question
+    setQuestion("Next question?");
+    setSelectedAnswerIndex(null);
+    setShowNextButton(false);
+    setConfirmClicked(false); // Reset confirm button clicked
+    // Reset other relevant states as needed
+  };
+
   return (
     <View style={styles.container}>
-      <ProgressBar progress={progress} color="#8543D9" style={styles.progressBar} />
+      <ProgressBar progress={progress} color="#FFFFFF" style={styles.progressBar} />
       <View style={styles.questionContainer}>
         <Text style={styles.question}>{question}</Text>
       </View>
@@ -113,24 +137,36 @@ const QuizScreen = () => {
         </View>
       </View>
       <View style={styles.buttonContainer}>
-        <View style={styles.skipButtonContainer}>
-          <TouchableOpacity onPress={handleSkip}>
-            <Text style={styles.skipText}>Skip</Text>
-          </TouchableOpacity>
-        </View>
+        {confirmClicked ? null : ( // Render only if confirm button is not clicked
+          <View style={styles.skipButtonContainer}>
+            <TouchableOpacity onPress={handleSkip}>
+              <Text style={styles.skipText}>Skip</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.confirmButtonContainer}>
-          <TouchableOpacity
-            style={[styles.confirmButton, selectedAnswerIndex === null ? styles.disabledButton : null]}
-            onPress={handleConfirm}
-            disabled={selectedAnswerIndex === null}
-          >
-            <Text style={[styles.confirmButtonText, selectedAnswerIndex === null ? styles.disabledButtonText : null]}>Confirm</Text>
-          </TouchableOpacity>
+          {!showNextButton ? (
+            <TouchableOpacity
+              style={[styles.confirmButton, selectedAnswerIndex === null ? styles.disabledButton : null]}
+              onPress={handleConfirm}
+              disabled={selectedAnswerIndex === null}
+            >
+              <Text style={[styles.confirmButtonText, selectedAnswerIndex === null ? styles.disabledButtonText : null]}>Confirm</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={handleNext}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     </View>
   );
 };
+
 const colors = {
   primaryBackground: '#231646',
   secondaryBackground: '#2D165B',
@@ -154,6 +190,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryBackground,
   },
   progressBar: {
+    backgroundColor: colors.secondaryBackground,
     height: 10,
     margin: 20,
     borderRadius: 5,
@@ -254,6 +291,17 @@ const styles = StyleSheet.create({
   },
   disabledButtonText: {
     color: colors.disabledButtonText,
+  },
+  nextButton: {
+    backgroundColor: colors.confirmButtonBackground,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  nextButtonText: {
+    color: colors.confirmButtonText,
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
