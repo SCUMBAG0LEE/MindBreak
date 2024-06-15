@@ -1,71 +1,90 @@
-import React from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-} from "react-native";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
   const router = useRouter();
+  const auth = getAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleLogin = async () => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push("/home");
+    } catch (error) {
+      Alert.alert("Error", "Invalid email or password");
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../assets/images/logo.png")}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>Log in</Text>
-      <Text style={styles.subtitle}>Welcome back!</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Username"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-        />
-        <TextInput
-          placeholder="Password"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          secureTextEntry={true}
-        />
-      </View>
-      <Text style={styles.forgotPassword}>Forgot Password?</Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.createAccountButton}
-          onPress={() => router.push("/register")}
-        >
-          <Text style={styles.createAccountText}>Create account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginText}>Log in</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.orContinueWith}>Or continue with</Text>
-      <View style={styles.socialButtonsContainer}>
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={require("../assets/images/google.png")}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={require("../assets/images/email.png")}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={require("../assets/images/facebook.png")}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-      </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={styles.logo}
+            />
+            <Text style={styles.title}>Log in</Text>
+            <Text style={styles.subtitle}>Welcome back!</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Email"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                placeholder="Password"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.createAccountButton}
+                onPress={() => router.push("/register")}
+              >
+                <Text style={styles.createAccountText}>Create account</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                <Text style={styles.loginText}>Log in</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.orContinueWith}>Or continue with</Text>
+            <View style={styles.socialButtonsContainer}>
+              <TouchableOpacity style={styles.socialButton}>
+                <Image
+                  source={require("../assets/images/google.png")}
+                  style={styles.socialIcon}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <Image
+                  source={require("../assets/images/x.png")}
+                  style={styles.socialIcon}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <Image
+                  source={require("../assets/images/facebook.png")}
+                  style={styles.socialIcon}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
       <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
     </View>
   );
@@ -75,6 +94,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2d046e",
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
     alignItems: "center",
     padding: 20,
   },
@@ -151,7 +176,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: "#bbb",
-    position: "absolute",
-    bottom: 20,
+    alignSelf: "center",
+    marginBottom: 10,
   },
 });
