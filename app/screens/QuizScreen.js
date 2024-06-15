@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
 import { AntDesign } from '@expo/vector-icons';
 
-const QuizScreen = () => {  
+const QuizScreen = () => {
   const [question, setQuestion] = useState("What is the capital of France?");
   const [answers, setAnswers] = useState(() => {
     // Initialize answers array with default values
@@ -20,6 +20,7 @@ const QuizScreen = () => {
   const [progress, setProgress] = useState(0.5);
   const [showNextButton, setShowNextButton] = useState(false); // State to show Next button
   const [confirmClicked, setConfirmClicked] = useState(false); // State to track if Confirm button clicked
+  const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false); // State to disable answer buttons
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -41,27 +42,29 @@ const QuizScreen = () => {
   };
 
   const handleAnswerSelection = (index) => {
-    setSelectedAnswerIndex(index);
+    if (!answerButtonsDisabled) {
+      setSelectedAnswerIndex(index);
 
-    // Reset styles for all answers
-    const updatedAnswers = answers.map((answer, idx) => ({
-      ...answer,
-      bgColor: '#422B83',
-      textColor: '#FFFFFF'
-    }));
+      // Reset styles for all answers
+      const updatedAnswers = answers.map((answer, idx) => ({
+        ...answer,
+        bgColor: '#422B83',
+        textColor: '#FFFFFF'
+      }));
 
-    // Apply selected style
-    updatedAnswers[index] = {
-      ...updatedAnswers[index],
-      bgColor: '#8543D9', // Selected answer background color
-      textColor: '#FFFFFF', // Selected answer text color
-    };
+      // Apply selected style
+      updatedAnswers[index] = {
+        ...updatedAnswers[index],
+        bgColor: '#8543D9', // Selected answer background color
+        textColor: '#FFFFFF', // Selected answer text color
+      };
 
-    setAnswers(updatedAnswers);
+      setAnswers(updatedAnswers);
+    }
   };
 
   const handleConfirm = () => {
-    if (selectedAnswerIndex !== null) {
+    if (!answerButtonsDisabled && selectedAnswerIndex !== null) {
       // Determine if the selected answer is correct
       const isCorrect = selectedAnswerIndex === correctAnswerIndex;
 
@@ -80,6 +83,7 @@ const QuizScreen = () => {
       setAnswers(updatedAnswers);
       setShowNextButton(true);
       setConfirmClicked(true); // Set confirm button clicked
+      setAnswerButtonsDisabled(true); // Disable answer buttons
     }
   };
 
@@ -104,12 +108,13 @@ const QuizScreen = () => {
     setSelectedAnswerIndex(null);
     setShowNextButton(false);
     setConfirmClicked(false); // Reset confirm button clicked
+    setAnswerButtonsDisabled(false); // Re-enable answer buttons
     // Reset other relevant states as needed
   };
 
   return (
     <View style={styles.container}>
-      <ProgressBar progress={progress} color="#FFFFFF" style={styles.progressBar} />
+      <ProgressBar progress={progress} color="#8543D9" style={styles.progressBar} />
       <View style={styles.questionContainer}>
         <Text style={styles.question}>{question}</Text>
       </View>
@@ -124,6 +129,7 @@ const QuizScreen = () => {
               key={index}
               style={styles.answerContainer}
               onPress={() => handleAnswerSelection(index)}
+              disabled={answerButtonsDisabled}
             >
               <View style={[
                 styles.answer,
@@ -149,7 +155,7 @@ const QuizScreen = () => {
             <TouchableOpacity
               style={[styles.confirmButton, selectedAnswerIndex === null ? styles.disabledButton : null]}
               onPress={handleConfirm}
-              disabled={selectedAnswerIndex === null}
+              disabled={selectedAnswerIndex === null || answerButtonsDisabled}
             >
               <Text style={[styles.confirmButtonText, selectedAnswerIndex === null ? styles.disabledButtonText : null]}>Confirm</Text>
             </TouchableOpacity>
