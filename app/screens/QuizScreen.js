@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
 import { AntDesign } from '@expo/vector-icons';
 
-const QuizScreen = () => {
+const QuizScreen = () => {  
   const [question, setQuestion] = useState("What is the capital of France?");
   const [answers, setAnswers] = useState(() => {
     // Initialize answers array with default values
@@ -131,11 +131,27 @@ const QuizScreen = () => {
     </View>
   );
 };
+const colors = {
+  primaryBackground: '#231646',
+  secondaryBackground: '#2D165B',
+  accentColor: '#8543D9',
+  correctAnswerBackground: '#4CAF50',
+  incorrectAnswerBackground: '#D9534F',
+  answerBackground: '#422B83',
+  answerText: '#FFFFFF',
+  timerBackground: '#FFFFFF',
+  timerText: '#422B83',
+  skipText: '#FDB94B',
+  confirmButtonBackground: '#FDB94B',
+  confirmButtonText: '#361757',
+  disabledButtonBackground: '#2A1C51',
+  disabledButtonText: '#B69156',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#231646',
+    backgroundColor: colors.primaryBackground,
   },
   progressBar: {
     height: 10,
@@ -144,14 +160,14 @@ const styles = StyleSheet.create({
   },
   questionContainer: {
     flex: 1,
-    backgroundColor: '#2D165B',
+    backgroundColor: colors.secondaryBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
   question: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: colors.answerText,
     marginBottom: 20,
   },
   answersWithTimerContainer: {
@@ -177,18 +193,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 10,
     alignItems: 'center',
+    backgroundColor: colors.answerBackground,
   },
   selectedAnswer: {
-    backgroundColor: '#8543D9',
+    backgroundColor: colors.accentColor,
   },
   answerText: {
     fontSize: 16,
+    color: colors.answerText,
   },
   timerContainer: {
     flexDirection: 'row',
     alignSelf: 'flex-end',
     columnGap: 10,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.timerBackground,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 10,
@@ -197,7 +215,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 16,
-    color: '#422B83',
+    color: colors.timerText,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -216,26 +234,26 @@ const styles = StyleSheet.create({
     flex: 1.5,
   },
   skipText: {
-    color: '#FDB94B',
+    color: colors.skipText,
     fontSize: 16,
     textDecorationLine: 'underline',
   },
   confirmButton: {
-    backgroundColor: '#FDB94B',
+    backgroundColor: colors.confirmButtonBackground,
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: 'center',
   },
   confirmButtonText: {
-    color: '#361757',
+    color: colors.confirmButtonText,
     fontSize: 16,
     fontWeight: 'bold',
   },
   disabledButton: {
-    backgroundColor: '#2A1C51',
+    backgroundColor: colors.disabledButtonBackground,
   },
   disabledButtonText: {
-    color: '#B69156',
+    color: colors.disabledButtonText,
   },
 });
 
