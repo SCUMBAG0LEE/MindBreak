@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { ProgressBar } from 'react-native-paper';
 import { AntDesign } from '@expo/vector-icons'; // Importing AntDesign icons
 
 const QuizScreen = () => {
   const [question, setQuestion] = useState("What is the capital of France?");
   const [answers, setAnswers] = useState(["London", "Paris", "Berlin", "Madrid"]);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(60); // 30 seconds timer
+  const [timeLeft, setTimeLeft] = useState(60); // 60 seconds timer
+  const [progress, setProgress] = useState(0.5);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,8 +36,19 @@ const QuizScreen = () => {
     // Handle next question or end of quiz
   };
 
+  const handleConfirm = () => {
+    if (selectedAnswer) {
+      // Handle confirmation of the selected answer
+    }
+  };
+
+  const handleSkip = () => {
+    // Handle skipping the question
+  };
+
   return (
     <View style={styles.container}>
+      <ProgressBar progress={0.5} color="#8543D9" style={styles.progressBar} />
       <View style={styles.questionContainer}>
         <Text style={styles.question}>{question}</Text>
       </View>
@@ -61,6 +74,22 @@ const QuizScreen = () => {
           ))}
         </View>
       </View>
+      <View style={styles.buttonContainer}>
+        <View style={styles.skipButtonContainer}>
+          <TouchableOpacity onPress={handleSkip}>
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.confirmButtonContainer}>
+          <TouchableOpacity
+            style={[styles.confirmButton, !selectedAnswer ? styles.disabledButton : null]}
+            onPress={handleConfirm}
+            disabled={!selectedAnswer}
+          >
+            <Text style={[styles.confirmButtonText, !selectedAnswer ? styles.disabledButtonText : null]}>Confirm</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </View>
   );
 };
@@ -69,6 +98,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#231646', // Dark theme background color
+  },
+  progressBar: {
+    height: 10,
+    margin: 20,
+    borderRadius: 5,
   },
   questionContainer: {
     flex: 1, // Take up half of the screen
@@ -127,7 +161,45 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 16,
-    color: '#422B83', // White text color
+    color: '#422B83',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 20,
+    width: '90%',
+    alignSelf: 'center',
+  },
+  skipButtonContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  confirmButtonContainer: {
+    flex: 1.5, // Confirm button takes twice as much space as the skip button
+  },
+  skipText: {
+    color: '#FDB94B',
+    fontSize: 16,
+    textDecorationLine: 'underline',
+  },
+  confirmButton: {
+    backgroundColor: '#FDB94B',
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: '#361757',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#2A1C51',
+  },
+  disabledButtonText: {
+    color: '#B69156',
   },
 });
 
