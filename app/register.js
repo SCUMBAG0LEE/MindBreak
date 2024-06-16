@@ -8,6 +8,9 @@ import {
   Image,
   StyleSheet,
   Alert,
+  Dimensions,
+  SafeAreaView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -34,7 +37,7 @@ export default function Register() {
         style={styles.backButton}
         onPress={() => router.push("/login")}
       >
-        <Text style={styles.backButtonText}>Back</Text>
+        <Text style={styles.backButtonText}>{"< Back"}</Text>
       </TouchableOpacity>
       <Image
         source={require("../assets/images/logo.png")}
@@ -75,20 +78,29 @@ export default function Register() {
   );
 }
 
+const { width, height } = Dimensions.get("window");
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2d046e",
     alignItems: "center",
     padding: 20,
+    width: width, // Use device width for scaling
+    height: height, // Use device height for scaling
   },
   backButton: {
     alignSelf: "flex-start",
     padding: 10,
+    marginLeft: 10,
+    backgroundColor: "#4c3c90",
+    borderRadius: 5,
+    marginTop: 50,
   },
   backButtonText: {
     color: "white",
     fontSize: 16,
+    fontWeight: "bold",
   },
   logo: {
     width: 80,

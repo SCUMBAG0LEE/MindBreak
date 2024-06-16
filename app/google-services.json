@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "166811038954",
+    "project_id": "devsauce-mindbreak",
+    "storage_bucket": "devsauce-mindbreak.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:166811038954:android:1f8765812e544e89be5393",
+        "android_client_info": {
+          "package_name": "com.deVsauce.MindBreak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRG9I3ConrJv4ZCgu2aAdTFA7XQTWZpQk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
