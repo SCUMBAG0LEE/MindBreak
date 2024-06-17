@@ -4,23 +4,43 @@ import { ProgressBar } from 'react-native-paper';
 import { AntDesign } from '@expo/vector-icons';
 
 const QuizScreen = () => {
-  const [question, setQuestion] = useState("What is the capital of France?");
+  const questions = [
+    {
+      question: "What is the capital of France?",
+      answers: ["London", "Paris", "Berlin", "Madrid"],
+      correctAnswerIndex: 1,
+    },
+    {
+      question: "What is the capital of Germany?",
+      answers: ["Vienna", "Berlin", "Zurich", "Munich"],
+      correctAnswerIndex: 1,
+    },
+    {
+      question: "What is the capital of Spain?",
+      answers: ["Barcelona", "Valencia", "Madrid", "Seville"],
+      correctAnswerIndex: 2,
+    }
+  ];
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
+  const [answered, setAnswered] = useState(false);
+  const [showSkipButton, setShowSkipButton] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(60);
+  const [progress, setProgress] = useState(0.5);
+  const [showNextButton, setShowNextButton] = useState(false);
+  const [confirmClicked, setConfirmClicked] = useState(false);
+  const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false);
+
+  const currentQuestion = questions[currentQuestionIndex];
+
   const [answers, setAnswers] = useState(() => {
-    // Initialize answers array with default values
-    const defaultAnswers = ["London", "Paris", "Berlin", "Madrid"];
-    return defaultAnswers.map(answer => ({
+    return currentQuestion.answers.map(answer => ({
       text: answer,
       bgColor: '#422B83',
       textColor: '#FFFFFF'
     }));
   });
-  const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
-  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(1); // Index of the correct answer
-  const [timeLeft, setTimeLeft] = useState(60);
-  const [progress, setProgress] = useState(0.5);
-  const [showNextButton, setShowNextButton] = useState(false); // State to show Next button
-  const [confirmClicked, setConfirmClicked] = useState(false); // State to track if Confirm button clicked
-  const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false); // State to disable answer buttons
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,33 +64,28 @@ const QuizScreen = () => {
   const handleAnswerSelection = (index) => {
     if (!answerButtonsDisabled) {
       setSelectedAnswerIndex(index);
-
-      // Reset styles for all answers
-      const updatedAnswers = answers.map((answer, idx) => ({
-        ...answer,
-        bgColor: '#422B83',
-        textColor: '#FFFFFF'
-      }));
-
-      // Apply selected style
-      updatedAnswers[index] = {
-        ...updatedAnswers[index],
-        bgColor: '#8543D9', // Selected answer background color
-        textColor: '#FFFFFF', // Selected answer text color
-      };
-
-      setAnswers(updatedAnswers);
     }
+    const updatedAnswers = answers.map((answer, idx) => ({
+      ...answer,
+      bgColor: '#422B83',
+      textColor: '#FFFFFF'
+    }));
+
+    updatedAnswers[index] = {
+      ...updatedAnswers[index],
+      bgColor: '#8543D9',
+      textColor: '#FFFFFF',
+    };
+
+    setAnswers(updatedAnswers);
   };
 
   const handleConfirm = () => {
     if (!answerButtonsDisabled && selectedAnswerIndex !== null) {
-      // Determine if the selected answer is correct
-      const isCorrect = selectedAnswerIndex === correctAnswerIndex;
+      const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
 
-      // Map through answers to update styles based on correctness
       const updatedAnswers = answers.map((answer, index) => {
-        if (index === correctAnswerIndex) {
+        if (index === currentQuestion.correctAnswerIndex) {
           return { ...answer, bgColor: isCorrect ? '#FFFFFF' : '#4CAF50', textColor: isCorrect ? '#8543D9' : '#FFFFFF' };
         } else if (index === selectedAnswerIndex && !isCorrect) {
           return { ...answer, bgColor: '#D9534F', textColor: '#FFFFFF' };
@@ -78,45 +93,49 @@ const QuizScreen = () => {
           return answer;
         }
       });
-
-      // Update state with new answers array and show Next button
       setAnswers(updatedAnswers);
       setShowNextButton(true);
-      setConfirmClicked(true); // Set confirm button clicked
-      setAnswerButtonsDisabled(true); // Disable answer buttons
+      setConfirmClicked(true);
+      setAnswerButtonsDisabled(true);
+      setAnswered(true);
+      setShowSkipButton(false);
     }
   };
 
   const handleSkip = () => {
-    // Handle skipping the question
+    // TODO
+    handleNext();
   };
 
   const handleNext = () => {
-    // Reset answers to default styles
-    const defaultAnswers = ["London", "Paris", "Berlin", "Madrid"];
-    const resetAnswers = defaultAnswers.map(answer => ({
-      text: answer,
-      bgColor: '#422B83',
-      textColor: '#FFFFFF'
-    }));
+    if (currentQuestionIndex < questions.length - 1) {
+      const nextQuestionIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextQuestionIndex);
+      setSelectedAnswerIndex(null);
+      setAnswered(false);
+      setShowSkipButton(true);
+      setTimeLeft(60);
+      setShowNextButton(false);
+      setConfirmClicked(false); // Reset confirm button clicked
+      setAnswerButtonsDisabled(false); // Re-enable answer buttons
 
-    setAnswers(resetAnswers);
-
-    // Logic to move to the next question
-    // For demonstration, reset states or fetch next question
-    setQuestion("Next question?");
-    setSelectedAnswerIndex(null);
-    setShowNextButton(false);
-    setConfirmClicked(false); // Reset confirm button clicked
-    setAnswerButtonsDisabled(false); // Re-enable answer buttons
-    // Reset other relevant states as needed
+      const nextQuestion = questions[nextQuestionIndex];
+      setAnswers(nextQuestion.answers.map(answer => ({
+        text: answer,
+        bgColor: '#422B83',
+        textColor: '#FFFFFF'
+      })));
+    } else {
+      // Handle end of quiz
+      alert("Quiz Completed!");
+    }
   };
 
   return (
     <View style={styles.container}>
       <ProgressBar progress={progress} color="#8543D9" style={styles.progressBar} />
       <View style={styles.questionContainer}>
-        <Text style={styles.question}>{question}</Text>
+        <Text style={styles.question}>{currentQuestion.question}</Text>
       </View>
       <View style={styles.answersWithTimerContainer}>
         <View style={styles.timerContainer}>
