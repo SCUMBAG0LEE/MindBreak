@@ -1,27 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
+import { fetchQuestions } from '../api';
 import { AntDesign } from '@expo/vector-icons';
 
 const QuizScreen = () => {
-  const questions = [
-    {
-      question: "What is the capital of France?",
-      answers: ["London", "Paris", "Berlin", "Madrid"],
-      correctAnswerIndex: 1,
-    },
-    {
-      question: "What is the capital of Germany?",
-      answers: ["Vienna", "Berlin", "Zurich", "Munich"],
-      correctAnswerIndex: 1,
-    },
-    {
-      question: "What is the capital of Spain?",
-      answers: ["Barcelona", "Valencia", "Madrid", "Seville"],
-      correctAnswerIndex: 2,
-    }
-  ];
-
+  const [questions, setQuestions] = useState([]);
+  const [answers, setAnswers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
   const [answered, setAnswered] = useState(false);
@@ -32,15 +17,47 @@ const QuizScreen = () => {
   const [confirmClicked, setConfirmClicked] = useState(false);
   const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false);
 
-  const currentQuestion = questions[currentQuestionIndex];
+  // useEffect(() => {
+  //   const initialQuestions = [
+  //     {
+  //       question: "What is the capital of France?",
+  //       answers: ["London", "Paris", "Berlin", "Madrid"],
+  //       correctAnswerIndex: 1,
+  //     },
+  //     {
+  //       question: "What is the capital of Germany?",
+  //       answers: ["Vienna", "Berlin", "Zurich", "Munich"],
+  //       correctAnswerIndex: 1,
+  //     },
+  //     {
+  //       question: "What is the capital of Spain?",
+  //       answers: ["Barcelona", "Valencia", "Madrid", "Seville"],
+  //       correctAnswerIndex: 2,
+  //     }
+  //   ];
+  //   setQuestions(initialQuestions);
+  // }, []);
 
-  const [answers, setAnswers] = useState(() => {
-    return currentQuestion.answers.map(answer => ({
-      text: answer,
-      bgColor: '#422B83',
-      textColor: '#FFFFFF'
-    }));
-  });
+  useEffect(() => {
+    fetchQuestions()
+      .then(fetchedQuestions => {
+        setQuestions(fetchedQuestions);
+      })
+      .catch(err => {
+        setError(err);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      const currentQuestion = questions[currentQuestionIndex];
+      setAnswers(currentQuestion.answers.map(answer => ({
+        text: answer,
+        bgColor: '#422B83',
+        textColor: '#FFFFFF'
+      })));
+    }
+  }, [questions, currentQuestionIndex]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -82,10 +99,10 @@ const QuizScreen = () => {
 
   const handleConfirm = () => {
     if (!answerButtonsDisabled && selectedAnswerIndex !== null) {
-      const isCorrect = selectedAnswerIndex === currentQuestion.correctAnswerIndex;
+      const isCorrect = selectedAnswerIndex === questions[currentQuestionIndex].correctAnswerIndex;
 
       const updatedAnswers = answers.map((answer, index) => {
-        if (index === currentQuestion.correctAnswerIndex) {
+        if (index === questions[currentQuestionIndex].correctAnswerIndex) {
           return { ...answer, bgColor: isCorrect ? '#FFFFFF' : '#4CAF50', textColor: isCorrect ? '#8543D9' : '#FFFFFF' };
         } else if (index === selectedAnswerIndex && !isCorrect) {
           return { ...answer, bgColor: '#D9534F', textColor: '#FFFFFF' };
@@ -134,9 +151,11 @@ const QuizScreen = () => {
   return (
     <View style={styles.container}>
       <ProgressBar progress={progress} color="#8543D9" style={styles.progressBar} />
-      <View style={styles.questionContainer}>
-        <Text style={styles.question}>{currentQuestion.question}</Text>
-      </View>
+      {questions.length > 0 && (
+        <View style={styles.questionContainer}>
+          <Text style={styles.question}>{questions[currentQuestionIndex].question}</Text>
+        </View>
+      )}
       <View style={styles.answersWithTimerContainer}>
         <View style={styles.timerContainer}>
           <AntDesign name="clockcircleo" size={24} color="#422B83" />
