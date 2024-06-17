@@ -1,34 +1,29 @@
 import React, { useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Alert,
-  Dimensions,
-  SafeAreaView,
-  Platform,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from "react-native";
 import { useRouter } from "expo-router";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Register() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const auth = getAuth();
+
   const handleRegister = async () => {
-    if (username && email && password) {
-      await AsyncStorage.setItem("username", username);
-      await AsyncStorage.setItem("password", password);
-      Alert.alert("Registration successful", "You can now log in");
-      router.push("/login");
+    if (email && password) {
+      try {
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
+        Alert.alert("Registration successful", "You can now log in");
+        router.push("/login");
+      } catch (error) {
+        Alert.alert("Error", error.message);
+      }
     } else {
       Alert.alert("Invalid input", "Please fill all the fields");
     }
@@ -46,7 +41,7 @@ export default function Register() {
               style={styles.backButton}
               onPress={() => router.push("/login")}
             >
-              <Text style={styles.backButtonText}>{"< Back"}</Text>
+              <Text style={styles.backButtonText}>Back</Text>
             </TouchableOpacity>
             <Image
               source={require("../assets/images/logo.png")}
@@ -55,13 +50,6 @@ export default function Register() {
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Good to have you join us!</Text>
             <View style={styles.inputContainer}>
-              <TextInput
-                placeholder="Username"
-                style={styles.input}
-                placeholderTextColor="#bbb"
-                value={username}
-                onChangeText={setUsername}
-              />
               <TextInput
                 placeholder="Email"
                 style={styles.input}
@@ -79,10 +67,7 @@ export default function Register() {
                 onChangeText={setPassword}
               />
             </View>
-            <TouchableOpacity
-              style={styles.signupButton}
-              onPress={handleRegister}
-            >
+            <TouchableOpacity style={styles.signupButton} onPress={handleRegister}>
               <Text style={styles.signupText}>Sign up</Text>
             </TouchableOpacity>
           </View>
@@ -93,55 +78,41 @@ export default function Register() {
   );
 }
 
-const { width, height } = Dimensions.get("window");
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2d046e",
-    alignItems: "center",
-    justifyContent: "center",
-    width: width,
-    height: height,
   },
   keyboardAvoidingView: {
     flex: 1,
-    width: "100%",
   },
   content: {
+    flex: 1,
     alignItems: "center",
     padding: 20,
-    flex: 1,
-    justifyContent: "center",
   },
   backButton: {
     alignSelf: "flex-start",
     padding: 10,
-    marginLeft: 10,
-    backgroundColor: "#4c3c90",
-    borderRadius: 5,
-    position: "absolute",
-    top: 60,
   },
   backButtonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
   },
   logo: {
     width: 80,
     height: 80,
-    marginBottom: 20,
+    marginVertical: 40,
   },
   title: {
     color: "white",
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
   },
   subtitle: {
     color: "#bbb",
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 40,
   },
   inputContainer: {
     width: "100%",
@@ -167,8 +138,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: "#bbb",
-    position: "absolute",
-    bottom: 10,
     alignSelf: "center",
+    marginBottom: 10,
   },
 });

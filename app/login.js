@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,112 +7,157 @@ import {
   Image,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
 export default function Login() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const auth = getAuth();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    const storedUsername = await AsyncStorage.getItem("username");
-    const storedPassword = await AsyncStorage.getItem("password");
-
-    if (username === storedUsername && password === storedPassword) {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       router.push("/home");
-    } else {
-      Alert.alert(
-        "Invalid credentials",
-        "Please enter correct username and password"
-      );
+    } catch (error) {
+      Alert.alert("Error", "Invalid email or password");
     }
   };
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../assets/images/logo.png")}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>Log in</Text>
-      <Text style={styles.subtitle}>Welcome back!</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Username"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          placeholder="Password"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-      </View>
-      <Text style={styles.forgotPassword}>Forgot Password?</Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.createAccountButton}
-          onPress={() => router.push("/register")}
-        >
-          <Text style={styles.createAccountText}>Create account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginText}>Log in</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.orContinueWith}>Or continue with</Text>
-      <View style={styles.socialButtonsContainer}>
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={require("../assets/images/google.png")}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={require("../assets/images/email.png")}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.socialButton}>
-          <Image
-            source={require("../assets/images/facebook.png")}
-            style={styles.socialIcon}
-          />
-        </TouchableOpacity>
-      </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={styles.logo}
+            />
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/landing")}
+            >
+              <Text style={styles.backButtonText}>{"< Back"}</Text>
+            </TouchableOpacity>
+            <Text style={styles.title}>Log in</Text>
+            <Text style={styles.subtitle}>Welcome back!</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Username"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                placeholder="Password"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+            <Text style={styles.forgotPassword}>Forgot Password?</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.createAccountButton}
+                onPress={() => router.push("/register")}
+              >
+                <Text style={styles.createAccountText}>Create account</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.loginButton}
+                onPress={handleLogin}
+              >
+                <Text style={styles.loginText}>Log in</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.orContinueWith}>Or continue with</Text>
+            <View style={styles.socialButtonsContainer}>
+              <TouchableOpacity style={styles.socialButton}>
+                <Image
+                  source={require("../assets/images/google.png")}
+                  style={styles.socialIcon}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <Image
+                  source={require("../assets/images/x.png")}
+                  style={styles.socialIcon}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.socialButton}>
+                <Image
+                  source={require("../assets/images/facebook.png")}
+                  style={styles.socialIcon}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
       <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
     </View>
   );
 }
 
+const { width, height } = Dimensions.get("window");
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2d046e",
+    width: width,
+    height: height,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    padding: 10,
+    marginLeft: 10,
+    backgroundColor: "#4c3c90",
+    borderRadius: 5,
+    position: "absolute",
+    top: 60,
+  },
+  backButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  content: {
     alignItems: "center",
     padding: 20,
+    justifyContent: "center",
+    flex: 1,
   },
   logo: {
     width: 80,
     height: 80,
-    marginVertical: 40,
+    marginBottom: 20,
   },
   title: {
     color: "white",
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
   },
   subtitle: {
     color: "#bbb",
     fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   inputContainer: {
     width: "100%",
@@ -129,6 +173,7 @@ const styles = StyleSheet.create({
   forgotPassword: {
     color: "#bbb",
     alignSelf: "flex-end",
+    marginBottom: 20,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -140,6 +185,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#4c3c90",
     padding: 15,
     borderRadius: 10,
+    flex: 1,
+    marginRight: 10,
+    alignItems: "center",
   },
   createAccountText: {
     color: "white",
@@ -148,6 +196,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f15a29",
     padding: 15,
     borderRadius: 10,
+    flex: 1,
+    alignItems: "center",
   },
   loginText: {
     color: "white",
@@ -166,6 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4c3c90",
     padding: 10,
     borderRadius: 10,
+    alignItems: "center",
   },
   socialIcon: {
     width: 30,
@@ -173,7 +224,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: "#bbb",
-    position: "absolute",
-    bottom: 20,
+    textAlign: "center",
+    paddingBottom: 10,
   },
 });
