@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ProgressBar } from 'react-native-paper';
+import { fetchQuestions } from '../api';
 import { AntDesign } from '@expo/vector-icons';
 
 const QuizScreen = () => {
+  const quizQuestion = [];
+  const quizAnswer = [];
+  const quizCorrectAnswer = [];
   const [question, setQuestion] = useState("What is the capital of France?");
   const [answers, setAnswers] = useState(() => {
     // Initialize answers array with default values
@@ -29,11 +33,28 @@ const QuizScreen = () => {
 
     if (timeLeft === 0) {
       clearInterval(timer);
+      handleSkip();
       // Handle time out
     }
 
     return () => clearInterval(timer);
   }, [timeLeft]);
+
+  useEffect(() => {
+    fetchQuestions().then(questions => {
+      for (let c = 0; c <= 9; c++) 
+        {
+          quizQuestion.push(questions[c].question)
+          quizAnswer.push(questions[c].answers.map(answer => ({
+            text: answer,
+            bgColor: '#422B83',
+            textColor: '#FFFFFF'
+          })));
+          quizCorrectAnswer.push(questions[c].correctAnswer);
+      }
+      setCorrectAnswerIndex(quizCorrectAnswer[0]), setAnswers(quizAnswer[0]), setQuestion(quizQuestion[0])
+    });
+  }, []);
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
@@ -88,7 +109,7 @@ const QuizScreen = () => {
   };
 
   const handleSkip = () => {
-    // Handle skipping the question
+    handleNext();
   };
 
   const handleNext = () => {
@@ -106,6 +127,7 @@ const QuizScreen = () => {
     // For demonstration, reset states or fetch next question
     setQuestion("Next question?");
     setSelectedAnswerIndex(null);
+    setTimeLeft(60);
     setShowNextButton(false);
     setConfirmClicked(false); // Reset confirm button clicked
     setAnswerButtonsDisabled(false); // Re-enable answer buttons
