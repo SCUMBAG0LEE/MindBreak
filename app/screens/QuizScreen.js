@@ -12,7 +12,7 @@ const QuizScreen = () => {
   const [answered, setAnswered] = useState(false);
   const [showSkipButton, setShowSkipButton] = useState(true);
   const [timeLeft, setTimeLeft] = useState(60);
-  const [progress, setProgress] = useState(0.5);
+  const [progress, setProgress] = useState(0);
   const [showNextButton, setShowNextButton] = useState(false);
   const [confirmClicked, setConfirmClicked] = useState(false);
   const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false);
@@ -66,11 +66,21 @@ const QuizScreen = () => {
 
     if (timeLeft === 0) {
       clearInterval(timer);
+      handleSkip();
       // Handle time out
     }
 
     return () => clearInterval(timer);
   }, [timeLeft]);
+
+  useEffect(() => {
+    // Calculate progress based on currentQuestionIndex and total number of questions
+    const totalQuestions = questions.length;
+    if (!isNaN(currentQuestionIndex) && !isNaN(totalQuestions) && totalQuestions > 0) {
+      const calculatedProgress = currentQuestionIndex / totalQuestions;
+      setProgress(calculatedProgress);
+    }
+  }, [currentQuestionIndex, questions]);  
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
