@@ -1,4 +1,5 @@
 import axios from 'axios';
+import he from 'he';
 
 export const fetchQuestions = async () => {
   try {
@@ -8,9 +9,9 @@ export const fetchQuestions = async () => {
       const shuffledAnswers = all_answer.sort(() => Math.random() - 0.5);
       const correctAnswerIndex = shuffledAnswers.findIndex((answer) => answer === question.correct_answer);
       return {
-        question: question.question,
+        question: he.decode(question.question),
         correctAnswerIndex: correctAnswerIndex,
-        answers: shuffledAnswers,
+        answers: shuffledAnswers.map(answer => he.decode(answer)),
       };
     });
     return questions;
