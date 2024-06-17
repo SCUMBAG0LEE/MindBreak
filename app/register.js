@@ -11,6 +11,9 @@ import {
   Dimensions,
   SafeAreaView,
   Platform,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -33,46 +36,58 @@ export default function Register() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push("/login")}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <Text style={styles.backButtonText}>{"< Back"}</Text>
-      </TouchableOpacity>
-      <Image
-        source={require("../assets/images/logo.png")}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Good to have you join us!</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Username"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          placeholder="Password"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-      </View>
-      <TouchableOpacity style={styles.signupButton} onPress={handleRegister}>
-        <Text style={styles.signupText}>Sign up</Text>
-      </TouchableOpacity>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/login")}
+            >
+              <Text style={styles.backButtonText}>{"< Back"}</Text>
+            </TouchableOpacity>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={styles.logo}
+            />
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Good to have you join us!</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Username"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={username}
+                onChangeText={setUsername}
+              />
+              <TextInput
+                placeholder="Email"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                placeholder="Password"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.signupButton}
+              onPress={handleRegister}
+            >
+              <Text style={styles.signupText}>Sign up</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
       <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
     </View>
   );
@@ -85,9 +100,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#2d046e",
     alignItems: "center",
+    justifyContent: "center",
+    width: width,
+    height: height,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    width: "100%",
+  },
+  content: {
+    alignItems: "center",
     padding: 20,
-    width: width, // Use device width for scaling
-    height: height, // Use device height for scaling
+    flex: 1,
+    justifyContent: "center",
   },
   backButton: {
     alignSelf: "flex-start",
@@ -95,7 +120,8 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     backgroundColor: "#4c3c90",
     borderRadius: 5,
-    marginTop: 50,
+    position: "absolute",
+    top: 60,
   },
   backButtonText: {
     color: "white",
@@ -105,17 +131,17 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    marginVertical: 40,
+    marginBottom: 20,
   },
   title: {
     color: "white",
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
   },
   subtitle: {
     color: "#bbb",
     fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   inputContainer: {
     width: "100%",
@@ -142,6 +168,7 @@ const styles = StyleSheet.create({
   footerText: {
     color: "#bbb",
     position: "absolute",
-    bottom: 20,
+    bottom: 10,
+    alignSelf: "center",
   },
 });

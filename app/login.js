@@ -43,11 +43,17 @@ export default function Login() {
               source={require("../assets/images/logo.png")}
               style={styles.logo}
             />
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/landing")}
+            >
+              <Text style={styles.backButtonText}>{"< Back"}</Text>
+            </TouchableOpacity>
             <Text style={styles.title}>Log in</Text>
             <Text style={styles.subtitle}>Welcome back!</Text>
             <View style={styles.inputContainer}>
               <TextInput
-                placeholder="Email"
+                placeholder="Username"
                 style={styles.input}
                 placeholderTextColor="#bbb"
                 value={email}
@@ -112,32 +118,46 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#2d046e",
-    alignItems: "center",
-    width: width, // Use device width for scaling
-    height: height, // Use device height for scaling
+    width: width,
+    height: height,
   },
   keyboardAvoidingView: {
     flex: 1,
   },
+  backButton: {
+    alignSelf: "flex-start",
+    padding: 10,
+    marginLeft: 10,
+    backgroundColor: "#4c3c90",
+    borderRadius: 5,
+    position: "absolute",
+    top: 60,
+  },
+  backButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   content: {
-    flex: 1,
     alignItems: "center",
     padding: 20,
+    justifyContent: "center",
+    flex: 1,
   },
   logo: {
     width: 80,
     height: 80,
-    marginVertical: 40,
+    marginBottom: 20,
   },
   title: {
     color: "white",
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
   },
   subtitle: {
     color: "#bbb",
     fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   inputContainer: {
     width: "100%",
@@ -153,6 +173,7 @@ const styles = StyleSheet.create({
   forgotPassword: {
     color: "#bbb",
     alignSelf: "flex-end",
+    marginBottom: 20,
   },
   buttonContainer: {
     flexDirection: "row",
@@ -164,6 +185,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#4c3c90",
     padding: 15,
     borderRadius: 10,
+    flex: 1,
+    marginRight: 10,
+    alignItems: "center",
   },
   createAccountText: {
     color: "white",
@@ -172,6 +196,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f15a29",
     padding: 15,
     borderRadius: 10,
+    flex: 1,
+    alignItems: "center",
   },
   loginText: {
     color: "white",
@@ -190,6 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4c3c90",
     padding: 10,
     borderRadius: 10,
+    alignItems: "center",
   },
   socialIcon: {
     width: 30,
@@ -197,7 +224,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: "#bbb",
-    alignSelf: "center",
-    marginBottom: 10,
+    textAlign: "center",
+    paddingBottom: 10,
   },
 });
