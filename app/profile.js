@@ -1,33 +1,54 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { auth } from "./firebase.js"; // Import the auth instance
 
 export default function Profile({ navigation }) {
-  const [username, setUsername] = useState("Guest");
-  const router = useRouter(); // Add this line
+  const [email, setEmail] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    const getUsername = async () => {
-      const storedUsername = await AsyncStorage.getItem("username");
-      if (storedUsername) {
-        setUsername(storedUsername);
+    const getEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) {
+        setEmail(storedEmail);
       }
     };
 
-    getUsername();
+    getEmail();
   }, []);
 
   const handleLogout = async () => {
-    // await AsyncStorage.removeItem("username");
-    // await AsyncStorage.removeItem("password");
-    router.push("/login"); // navigate to login screen
+    await auth.signOut(); // Sign out the user
+    await AsyncStorage.removeItem("email"); // Remove the email from storage
+    router.push("/login"); // Navigate to login screen
   };
 
   const handleDeleteAccount = async () => {
-    await AsyncStorage.removeItem("username");
-    await AsyncStorage.removeItem("password");
-    router.push("/login"); // navigate to login screen
+    Alert.alert(
+      "Delete Account",
+      "Are you sure you want to delete your account?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const user = auth.currentUser;
+              await user.delete(); // Delete the user's account instance
+              await AsyncStorage.removeItem("email"); // Remove the email from storage
+              router.push("/login"); // Navigate to login screen
+            } catch (error) {
+              console.error("Error deleting account:", error);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -37,15 +58,12 @@ export default function Profile({ navigation }) {
           source={require("../assets/images/profile.png")}
           style={styles.avatar}
         />
-        <Text style={styles.title}>Welcome, {username}!</Text>
+        <Text style={styles.title}>Welcome, {email}!</Text>
       </View>
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.logoutText}>Log out</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={handleDeleteAccount}
-      >
+      <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
         <Text style={styles.deleteText}>Delete Account</Text>
       </TouchableOpacity>
     </View>

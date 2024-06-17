@@ -1,22 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const router = useRouter();
   const auth = getAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Add this state
+
+  useEffect(() => {
+    // Listen for authentication state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is logged in, navigate to home directly
+        setIsLoggedIn(true);
+        router.push("/home");
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+
+    return unsubscribe; // Clean up the listener when the component unmounts
+  }, [auth, router]);
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      await AsyncStorage.setItem("email", user.email);
       router.push("/home");
     } catch (error) {
       Alert.alert("Error", "Invalid email or password");
     }
   };
+
+  if (isLoggedIn) {
+    // If user is already logged in, don't render the login form
+    return null;
+  }
 
   return (
     <View style={styles.container}>

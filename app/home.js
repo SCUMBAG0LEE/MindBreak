@@ -4,24 +4,24 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 
 export default function Home() {
-  const [username, setUsername] = useState("Guest");
+  const [email, setEmail] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    const getUsername = async () => {
-      const storedUsername = await AsyncStorage.getItem("username");
-      if (storedUsername) {
-        setUsername(storedUsername);
+    const getEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) {
+        setEmail(storedEmail);
       }
     };
 
-    getUsername();
+    getEmail();
   }, []);
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.welcomeText}>Welcome, {username}!</Text>
+        <Text style={styles.welcomeText}>Welcome, {email}!</Text>
         <TouchableOpacity onPress={handleAvatarPress}>
           <Image
             source={require("../assets/images/profile.png")}
@@ -33,7 +33,7 @@ export default function Home() {
   );
 
   function handleAvatarPress() {
-    if (username === "Guest") {
+    if (email === "") {
       router.push("/login");
     } else {
       router.push("/profile");
