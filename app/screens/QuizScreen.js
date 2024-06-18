@@ -11,7 +11,7 @@ const QuizScreen = () => {
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [showSkipButton, setShowSkipButton] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [progress, setProgress] = useState(0);
   const [showNextButton, setShowNextButton] = useState(false);
   const [confirmClicked, setConfirmClicked] = useState(false);
@@ -19,6 +19,8 @@ const QuizScreen = () => {
   const [isTimerPaused, setIsTimerPaused] = useState(false); 
   const [score, setScore] = useState(0); // Score state
   const [quizCompleted, setQuizCompleted] = useState(false);
+  const [timeUp, setTimeUp] = useState(false); // Add this line
+
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -63,14 +65,15 @@ const QuizScreen = () => {
   }, [questions, currentQuestionIndex]);
 
   useEffect(() => {
-    if (!isTimerPaused) {
+    if (!isTimerPaused && !quizCompleted) {
       const timer = setInterval(() => {
         setTimeLeft(prevTime => prevTime - 1);
       }, 1000);
 
       if (timeLeft === 0) {
         clearInterval(timer);
-        handleSkip();
+        setTimeUp(true);
+        setQuizCompleted(true);
         // Handle time out
       }
 
@@ -151,7 +154,6 @@ const QuizScreen = () => {
       setSelectedAnswerIndex(null);
       setAnswered(false);
       setShowSkipButton(true);
-      setTimeLeft(60);
       setShowNextButton(false);
       setConfirmClicked(false);
       setAnswerButtonsDisabled(false);
@@ -177,7 +179,7 @@ const QuizScreen = () => {
   if (quizCompleted) {
     return (
       <View style={styles.completionContainer}>
-        <Text style={styles.completionText}>Quiz Completed!</Text>
+        <Text style={styles.completionText}>{timeUp ? "Time's up!" : "Quiz Completed!"}</Text>
         <Text style={styles.scoreText}>Your Score: {score} / {questions.length}</Text>
         <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
