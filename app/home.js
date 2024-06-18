@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -7,21 +8,58 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from "react-native";
-import Navbar from "./navbar"; // Ensure this path is correct
+import { useRouter } from "expo-router";
+
+import Navbar from "./navbar";
 
 export default function Home() {
+  const [email, setEmail] = useState("");
+  const router = useRouter();
+
+  useEffect(() => {
+    const getEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) {
+        setEmail(storedEmail);
+      }
+    };
+
+    getEmail();
+  }, []);
+
+  // useEffect(() => {
+  //   const getUsername = async () => {
+  //     const storedUsername = await AsyncStorage.getItem("username");
+  //     if (storedUsername) {
+  //       setUsername(storedUsername);
+  //     }
+  //   };
+
+  //   getUsername();
+  // }, []);
+
+  function handleAvatarPress() {
+    if (email === "") {
+      router.push("/login");
+    } else {
+      router.push("/profile");
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hello, Name</Text>
+            <Text style={styles.greeting}>Welcome, {email}!</Text>
             <Text style={styles.subtitle}>Let's start learning</Text>
           </View>
-          <Image
-            source={{ uri: "https://via.placeholder.com/50" }} // Replace with actual profile image
-            style={styles.profileImage}
-          />
+          <TouchableOpacity onPress={handleAvatarPress}>
+            <Image
+              source={require("../assets/images/profile.png")}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
         </View>
         <View style={styles.timeSpentCard}>
           <Text style={styles.timeSpentText}>Time Spent</Text>
@@ -71,7 +109,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 32, // Adjusted margin for the header
+    marginTop: 40, // Adjusted margin for the header
     marginBottom: 16,
   },
   greeting: {

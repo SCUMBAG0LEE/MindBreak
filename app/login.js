@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,21 +15,68 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const router = useRouter();
   const auth = getAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Add this state
+
+  useEffect(() => {
+    // Listen for authentication state changes
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is logged in, navigate to home directly
+        setIsLoggedIn(true);
+        router.push("/home");
+      } else {
+        setIsLoggedIn(false);
+      }
+    });
+
+    return unsubscribe; // Clean up the listener when the component unmounts
+  }, [auth, router]);
 
   const handleLogin = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      if (email === "" || password === "") {
+        throw new Error("Email and password cannot be empty");
+      }
+
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      // Save email to AsyncStorage
+      await AsyncStorage.setItem("email", user.email);
+
+      // Navigate to home screen
       router.push("/home");
     } catch (error) {
-      Alert.alert("Error", "Invalid email or password");
+      let errorMessage = "An error occurred";
+
+      if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password"
+      ) {
+        errorMessage = "Invalid email or password";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
     }
   };
+
+  if (isLoggedIn) {
+    // If user is already logged in, don't render the login form
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -53,7 +100,7 @@ export default function Login() {
             <Text style={styles.subtitle}>Welcome back!</Text>
             <View style={styles.inputContainer}>
               <TextInput
-                placeholder="Username"
+                placeholder="Email"
                 style={styles.input}
                 placeholderTextColor="#bbb"
                 value={email}

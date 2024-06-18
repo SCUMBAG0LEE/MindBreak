@@ -7,24 +7,46 @@ import {
   ScrollView,
   StatusBar,
   StyleSheet,
+  TouchableOpacity,
 } from "react-native";
 import Navbar from "./navbar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 export default function Courses() {
-  const [username, setUsername] = useState("Guest"); // State for username
+  const [email, setEmail] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
-    const getUsername = async () => {
-      const storedUsername = await AsyncStorage.getItem("username");
-      if (storedUsername) {
-        setUsername(storedUsername);
+    const getEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) {
+        setEmail(storedEmail);
       }
     };
 
-    getUsername();
+    getEmail();
   }, []);
+
+  // useEffect(() => {
+  //   const getUsername = async () => {
+  //     const storedUsername = await AsyncStorage.getItem("username");
+  //     if (storedUsername) {
+  //       setUsername(storedUsername);
+  //     }
+  //   };
+
+  //   getUsername();
+  // }, []);
+
+  function handleAvatarPress() {
+    if (email === "") {
+      router.push("/login");
+    } else {
+      router.push("/profile");
+    }
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -33,11 +55,13 @@ export default function Courses() {
         <View style={styles.header}>
           <Text style={styles.title}>Courses</Text>
           <View style={styles.profileContainer}>
-            <Text style={styles.username}>{username}</Text>
-            <Image
-              source={require("../assets/images/profile.png")}
-              style={styles.profileImage}
-            />
+            <Text style={styles.username}>{email}</Text>
+            <TouchableOpacity onPress={handleAvatarPress}>
+              <Image
+                source={require("../assets/images/profile.png")}
+                style={styles.profileImage}
+              />
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.searchContainer}>
