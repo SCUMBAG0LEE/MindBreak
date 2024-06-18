@@ -3,17 +3,24 @@ import { getFirestore } from 'firebase/firestore';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native'; // Import Alert from react-native for showing warnings/alerts
 
 // Load the Google Services JSON file
+let googleServices;
 try {
-  const googleServices = require('./google-services.json');
+  googleServices = require('./google-services.json');
 } catch (error) {
-  console.error('Error loading google-services.json:', error);
-  throw error;
+  console.error('No google-services.json found:', error);
+  Alert.alert(
+    'Warning',
+    'No google-services.json detected. Firebase services may not be initialized properly.',
+    [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+  );
 }
 
-// Extract the necessary configuration
+let app;
 try {
+  // Extract the necessary configuration
   const firebaseConfig = {
     apiKey: googleServices.client[0].api_key[0].current_key,
     appId: googleServices.client[0].client_info.mobilesdk_app_id,
@@ -21,40 +28,42 @@ try {
     storageBucket: googleServices.project_info.storage_bucket,
     messagingSenderId: googleServices.project_info.project_number,
   };
-} catch (error) {
-  console.error('Error extracting Firebase configuration:', error);
-  throw error;
-}
 
-// Initialize Firebase with the extracted configuration
-try {
-  const app = initializeApp(firebaseConfig);
+  // Initialize Firebase with the extracted configuration
+  app = initializeApp(firebaseConfig);
 } catch (error) {
   console.error('Error initializing Firebase app:', error);
-  throw error;
+  // Handle initialization error, e.g., notify the user or fallback logic
+  // throw error; // Optionally rethrow if needed
 }
 
+let auth;
 try {
-  const auth = initializeAuth(app, {
+  auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
 } catch (error) {
-  console.error('Error initializing Firebase auth:', error);
-  throw error;
+  console.error('Error initializing Firebase Auth:', error);
+  // Handle auth initialization error
+  // throw error; // Optionally rethrow if needed
 }
 
+let db;
 try {
-  const db = getFirestore(app);
+  db = getFirestore(app);
 } catch (error) {
   console.error('Error getting Firestore instance:', error);
-  throw error;
+  // Handle Firestore initialization error
+  // throw error; // Optionally rethrow if needed
 }
 
+let storage;
 try {
-  const storage = getStorage(app);
+  storage = getStorage(app);
 } catch (error) {
-  console.error('Error getting Storage instance:', error);
-  throw error;
+  console.error('Error getting Firebase Storage instance:', error);
+  // Handle Storage initialization error
+  // throw error; // Optionally rethrow if needed
 }
 
 export { db, auth, storage };

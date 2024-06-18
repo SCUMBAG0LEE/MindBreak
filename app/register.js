@@ -11,25 +11,34 @@ export default function Register() {
   const auth = getAuth();
 
   const handleRegister = async () => {
+    if (!email || !password) {
+      Alert.alert("Invalid input", "Please fill all the fields");
+      return;
+    }
+
     try {
-      if (email && password) {
-        try {
-          const userCredential = await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-          );
-          const user = userCredential.user;
-          Alert.alert("Registration successful", "You can now log in");
-          router.push("/login");
-        } catch (error) {
-          Alert.alert("Error", error.message);
-        }
-      } else {
-        Alert.alert("Invalid input", "Please fill all the fields");
-      }
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+      Alert.alert("Registration successful", "You can now log in");
+      router.push("/login");
     } catch (error) {
-      Alert.alert("Error", "An unexpected error occurred");
+      let errorMessage = "An error occurred. Please try again.";
+
+      if (error.code === "auth/weak-password") {
+        errorMessage = "The password is too weak.";
+      } else if (error.code === "auth/email-already-in-use") {
+        errorMessage = "The email address is already in use.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "The email address is invalid.";
+      } else {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
     }
   };
 
@@ -37,13 +46,7 @@ export default function Register() {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => {
-          try {
-            router.push("/login");
-          } catch (error) {
-            Alert.alert("Error", "Failed to navigate to login page");
-          }
-        }}
+        onPress={() => router.push("/login")}
       >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
@@ -71,10 +74,7 @@ export default function Register() {
           onChangeText={setPassword}
         />
       </View>
-      <TouchableOpacity
-        style={styles.signupButton}
-        onPress={handleRegister}
-      >
+      <TouchableOpacity style={styles.signupButton} onPress={handleRegister}>
         <Text style={styles.signupText}>Sign up</Text>
       </TouchableOpacity>
       <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>

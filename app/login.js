@@ -28,12 +28,29 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
+      if (email === "" || password === "") {
+        throw new Error("Email and password cannot be empty");
+      }
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      
+      // Save email to AsyncStorage
       await AsyncStorage.setItem("email", user.email);
+      
+      // Navigate to home screen
       router.push("/home");
+      
     } catch (error) {
-      Alert.alert("Error", "Invalid email or password");
+      let errorMessage = "An error occurred";
+      
+      if (error.code === "auth/user-not-found" || error.code === "auth/wrong-password") {
+        errorMessage = "Invalid email or password";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
     }
   };
 
