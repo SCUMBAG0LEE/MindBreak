@@ -114,7 +114,7 @@ const QuizScreen = () => {
     if (!answerButtonsDisabled && selectedAnswerIndex !== null) {
       const isCorrect = selectedAnswerIndex === questions[currentQuestionIndex].correctAnswerIndex;
 
-      const updatedAnswers = answers.map((answer, index) => {
+      const colorsCorrectAnswer = answers.map((answer, index) => {
         if (index === questions[currentQuestionIndex].correctAnswerIndex) {
           return { ...answer, bgColor: isCorrect ? '#FFFFFF' : '#4CAF50', textColor: isCorrect ? '#8543D9' : '#FFFFFF' };
         } else if (index === selectedAnswerIndex && !isCorrect) {
@@ -123,7 +123,7 @@ const QuizScreen = () => {
           return answer;
         }
       });
-      setAnswers(updatedAnswers);
+      setAnswers(colorsCorrectAnswer);
       setShowNextButton(true);
       setConfirmClicked(true);
       setAnswerButtonsDisabled(true);
@@ -265,6 +265,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.answerText,
     marginBottom: 20,
+    marginHorizontal: 20,
   },
   answersWithTimerContainer: {
     flex: 1,
