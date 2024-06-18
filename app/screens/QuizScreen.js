@@ -17,6 +17,8 @@ const QuizScreen = () => {
   const [confirmClicked, setConfirmClicked] = useState(false);
   const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false);
   const [isTimerPaused, setIsTimerPaused] = useState(false); 
+  const [score, setScore] = useState(0); // Score state
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -114,6 +116,10 @@ const QuizScreen = () => {
     if (!answerButtonsDisabled && selectedAnswerIndex !== null) {
       const isCorrect = selectedAnswerIndex === questions[currentQuestionIndex].correctAnswerIndex;
 
+      if (isCorrect) {
+        setScore(prevScore => prevScore += 1);
+      }
+
       const colorsCorrectAnswer = answers.map((answer, index) => {
         if (index === questions[currentQuestionIndex].correctAnswerIndex) {
           return { ...answer, bgColor: isCorrect ? '#FFFFFF' : '#4CAF50', textColor: isCorrect ? '#8543D9' : '#FFFFFF' };
@@ -159,9 +165,26 @@ const QuizScreen = () => {
       })));
     } else {
       // Handle end of quiz
-      alert("Quiz Completed!");
+      setQuizCompleted(true);
     }
   };
+
+  const handleFinish = () => {
+    // Handle quiz finish, e.g., redirect to another screen
+    alert("Quiz Finished!");
+  };
+
+  if (quizCompleted) {
+    return (
+      <View style={styles.completionContainer}>
+        <Text style={styles.completionText}>Quiz Completed!</Text>
+        <Text style={styles.scoreText}>Your Score: {score} / {questions.length}</Text>
+        <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
+          <Text style={styles.finishButtonText}>Finish</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -362,6 +385,32 @@ const styles = StyleSheet.create({
     color: colors.confirmButtonText,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  completionContainer: {
+    backgroundColor: colors.primaryBackground,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  completionText: {
+    color: colors.answerText,
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  scoreText: {
+    color: colors.answerText,
+    fontSize: 18,
+    marginBottom: 16,
+  },
+  finishButton: {
+    backgroundColor: colors.confirmButtonBackground,
+    padding: 16,
+    borderRadius: 8,
+  },
+  finishButtonText: {
+    color: colors.confirmButtonText,
+    fontSize: 16,
   },
 });
 
