@@ -11,21 +11,25 @@ export default function Register() {
   const auth = getAuth();
 
   const handleRegister = async () => {
-    if (email && password) {
-      try {
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
-        const user = userCredential.user;
-        Alert.alert("Registration successful", "You can now log in");
-        router.push("/login");
-      } catch (error) {
-        Alert.alert("Error", error.message);
+    try {
+      if (email && password) {
+        try {
+          const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+          const user = userCredential.user;
+          Alert.alert("Registration successful", "You can now log in");
+          router.push("/login");
+        } catch (error) {
+          Alert.alert("Error", error.message);
+        }
+      } else {
+        Alert.alert("Invalid input", "Please fill all the fields");
       }
-    } else {
-      Alert.alert("Invalid input", "Please fill all the fields");
+    } catch (error) {
+      Alert.alert("Error", "An unexpected error occurred");
     }
   };
 
@@ -33,7 +37,13 @@ export default function Register() {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => router.push("/login")}
+        onPress={() => {
+          try {
+            router.push("/login");
+          } catch (error) {
+            Alert.alert("Error", "Failed to navigate to login page");
+          }
+        }}
       >
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
@@ -61,7 +71,10 @@ export default function Register() {
           onChangeText={setPassword}
         />
       </View>
-      <TouchableOpacity style={styles.signupButton} onPress={handleRegister}>
+      <TouchableOpacity
+        style={styles.signupButton}
+        onPress={handleRegister}
+      >
         <Text style={styles.signupText}>Sign up</Text>
       </TouchableOpacity>
       <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
