@@ -12,7 +12,7 @@ import { router, Link } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Button, Icon, colors } from "react-native-elements";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTable }from "react-table";
+// import { useTable }from "react-table";
 
 // make a function for styles with const
 const styles = StyleSheet.create({
@@ -31,6 +31,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     paddingHorizontal: 20,
+    position: "static",
   },
 
   textWelcome: {
@@ -74,6 +75,7 @@ const styles = StyleSheet.create({
 
   contentText: {
     fontSize: 18,
+    letterSpacing: 2,
     // fontFamily:=> pls help change this to poppins
     color: '#fff',
     marginRight: "50%",
@@ -101,6 +103,7 @@ const styles = StyleSheet.create({
 
   userStats: {
     marginTop: 30,
+    color: "#fff",
   },
 
   detailsContainer: {
@@ -118,6 +121,7 @@ const styles = StyleSheet.create({
   },
 
   detailsButtonText: {
+    marginTop: 15,
     color: "#fff",
   },
 
