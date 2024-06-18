@@ -16,6 +16,7 @@ const QuizScreen = () => {
   const [showNextButton, setShowNextButton] = useState(false);
   const [confirmClicked, setConfirmClicked] = useState(false);
   const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false);
+  const [isTimerPaused, setIsTimerPaused] = useState(false); 
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -60,18 +61,20 @@ const QuizScreen = () => {
   }, [questions, currentQuestionIndex]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(prevTime => prevTime - 1);
-    }, 1000);
+    if (!isTimerPaused) {
+      const timer = setInterval(() => {
+        setTimeLeft(prevTime => prevTime - 1);
+      }, 1000);
 
-    if (timeLeft === 0) {
-      clearInterval(timer);
-      handleSkip();
-      // Handle time out
+      if (timeLeft === 0) {
+        clearInterval(timer);
+        handleSkip();
+        // Handle time out
+      }
+
+      return () => clearInterval(timer);
     }
-
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+  }, [timeLeft, isTimerPaused]);
 
   useEffect(() => {
     // Calculate progress based on currentQuestionIndex and total number of questions
@@ -126,6 +129,7 @@ const QuizScreen = () => {
       setAnswerButtonsDisabled(true);
       setAnswered(true);
       setShowSkipButton(false);
+      setIsTimerPaused(true);
     }
   };
 
@@ -143,8 +147,9 @@ const QuizScreen = () => {
       setShowSkipButton(true);
       setTimeLeft(60);
       setShowNextButton(false);
-      setConfirmClicked(false); // Reset confirm button clicked
-      setAnswerButtonsDisabled(false); // Re-enable answer buttons
+      setConfirmClicked(false);
+      setAnswerButtonsDisabled(false);
+      setIsTimerPaused(false);
 
       const nextQuestion = questions[nextQuestionIndex];
       setAnswers(nextQuestion.answers.map(answer => ({
