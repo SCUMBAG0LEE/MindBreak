@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+  BackHandler
+} from "react-native";
 import { ProgressBar } from "react-native-paper";
 import { fetchQuestions } from "../api";
 import { AntDesign } from "@expo/vector-icons";
@@ -22,7 +31,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeUp, setTimeUp] = useState(false); // Add this line
   const navigation = useNavigation();
-  const percentScore = score / questions.length * 100
+  const percentScore = (score / questions.length) * 100;
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -197,6 +206,44 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
     navigation.navigate("courses");
   };
 
+  const handleExitQuiz = () => {
+    Alert.alert(
+      "Exit Quiz",
+      "Are you sure you want to exit the quiz?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Exit",
+          onPress: () => {
+            // Handle exiting the quiz
+            navigation.navigate("courses"); // Redirect to courses screen
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      if (!quizCompleted) {
+        handleExitQuiz();
+        return true; // Prevent default behavior (exit app)
+      }
+      return false; // Default behavior (back to previous screen)
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [quizCompleted]);
+
   if (quizCompleted) {
     return (
       <View style={styles.completionContainer}>
@@ -206,9 +253,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
         <Text style={styles.scoreText}>
           Your Score: {score} / {questions.length}
         </Text>
-        <Text style={styles.percentScoreText}>
-          {percentScore}% 
-        </Text>
+        <Text style={styles.percentScoreText}>{percentScore}%</Text>
         <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
@@ -233,84 +278,105 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <ProgressBar
-        progress={progress}
-        color="#8543D9"
-        style={styles.progressBar}
-      />
-      {questions.length > 0 && (
-        <View style={styles.questionContainer}>
-          <Text style={styles.question}>
-            {questions[currentQuestionIndex].question}
-          </Text>
-        </View>
-      )}
-      <View style={styles.answersWithTimerContainer}>
-        <View style={styles.timerContainer}>
-          <AntDesign name="clockcircleo" size={24} color="#422B83" />
-          <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-        </View>
-        <View style={styles.answersContainer}>
-          {answers.map((answer, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.answerContainer}
-              onPress={() => handleAnswerSelection(index)}
-              disabled={answerButtonsDisabled}
-            >
-              <View
-                style={[
-                  styles.answer,
-                  selectedAnswerIndex === index ? styles.selectedAnswer : null,
-                  { backgroundColor: answer.bgColor },
-                ]}
-              >
-                <Text style={[styles.answerText, { color: answer.textColor }]}>
-                  {answer.text}
-                </Text>
-              </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity style={styles.backButton} onPress={handleExitQuiz}>
+              <Text style={styles.backButtonText}>Exit</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-      <View style={styles.buttonContainer}>
-        {confirmClicked ? null : ( // Render only if confirm button is not clicked
-          <View style={styles.skipButtonContainer}>
-            <TouchableOpacity onPress={handleSkip}>
-              <Text style={styles.skipText}>Skip</Text>
-            </TouchableOpacity>
+            <View style={styles.progressContainer}>
+              <ProgressBar
+                progress={progress}
+                color="#8543D9"
+                style={styles.progressBar}
+              />
+            </View>
           </View>
-        )}
-        <View style={styles.confirmButtonContainer}>
-          {!showNextButton ? (
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                selectedAnswerIndex === null ? styles.disabledButton : null,
-              ]}
-              onPress={handleConfirm}
-              disabled={selectedAnswerIndex === null || answerButtonsDisabled}
-            >
-              <Text
-                style={[
-                  styles.confirmButtonText,
-                  selectedAnswerIndex === null
-                    ? styles.disabledButtonText
-                    : null,
-                ]}
-              >
-                Confirm
+
+          {questions.length > 0 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.question}>
+                {questions[currentQuestionIndex].question}
               </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-              <Text style={styles.nextButtonText}>Next</Text>
-            </TouchableOpacity>
+            </View>
           )}
+          <View style={styles.answersWithTimerContainer}>
+            <View style={styles.timerContainer}>
+              <AntDesign name="clockcircleo" size={24} color="#422B83" />
+              <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+            </View>
+            <View style={styles.answersContainer}>
+              {answers.map((answer, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.answerContainer}
+                  onPress={() => handleAnswerSelection(index)}
+                  disabled={answerButtonsDisabled}
+                >
+                  <View
+                    style={[
+                      styles.answer,
+                      selectedAnswerIndex === index
+                        ? styles.selectedAnswer
+                        : null,
+                      { backgroundColor: answer.bgColor },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.answerText, { color: answer.textColor }]}
+                    >
+                      {answer.text}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <View style={styles.buttonContainer}>
+            {confirmClicked ? null : ( // Render only if confirm button is not clicked
+              <View style={styles.skipButtonContainer}>
+                <TouchableOpacity onPress={handleSkip}>
+                  <Text style={styles.skipText}>Skip</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={styles.confirmButtonContainer}>
+              {!showNextButton ? (
+                <TouchableOpacity
+                  style={[
+                    styles.confirmButton,
+                    selectedAnswerIndex === null ? styles.disabledButton : null,
+                  ]}
+                  onPress={handleConfirm}
+                  disabled={
+                    selectedAnswerIndex === null || answerButtonsDisabled
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.confirmButtonText,
+                      selectedAnswerIndex === null
+                        ? styles.disabledButtonText
+                        : null,
+                    ]}
+                  >
+                    Confirm
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={handleNext}
+                >
+                  <Text style={styles.nextButtonText}>Next</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -332,9 +398,22 @@ const colors = {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
+  },
+  container: {
+    flex: 1,
+    paddingTop: 20,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    margin: 20,
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: "center",
   },
   progressBar: {
     backgroundColor: colors.secondaryBackground,
@@ -342,6 +421,21 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 5,
   },
+  backButton: {
+    flex: 0.2,
+    backgroundColor: colors.confirmButtonBackground,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    alignSelf: "center",
+  },
+  backButtonText: {
+    color: colors.confirmButtonText,
+    fontSize: 16,
+    fontWeight: "bold",
+    alignSelf: "center",
+  },
+
   questionContainer: {
     flex: 1,
     backgroundColor: colors.secondaryBackground,
@@ -482,6 +576,10 @@ const styles = StyleSheet.create({
   finishButtonText: {
     color: colors.confirmButtonText,
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
 });
 
