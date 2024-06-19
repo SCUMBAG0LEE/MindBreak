@@ -43,10 +43,11 @@ export default function Register() {
       try {
 
         // After profile picture upload is successful, update Firestore document
+        const imageUrl = await handleProfilePictureUpload(user);
         await setDoc(doc(db, "users", user.uid), {
           username: username,
           email: email,
-          pfp: null, // Use the downloaded URL
+          pfp: imageUrl, // Use the downloaded URL
         });
 
         console.log("Firestore document updated successfully.");
