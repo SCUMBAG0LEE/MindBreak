@@ -13,11 +13,12 @@ import Navbar from "./navbar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Courses() {
   const [email, setEmail] = useState("");
   const router = useRouter();
-
+  const navigation = useNavigation();
   useEffect(() => {
     const getEmail = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
@@ -48,9 +49,12 @@ export default function Courses() {
     }
   }
 
+  const handleNavigation = (screenName) => {
+    navigation.navigate(screenName);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" />
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Courses</Text>
@@ -75,36 +79,91 @@ export default function Courses() {
             style={styles.searchIcon}
           />
         </View>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {renderSection("Recommended", [
-            {
-              image: require("../assets/images/language.png"),
-              text: "Language Quiz",
-            },
-            {
-              image: require("../assets/images/painting.png"),
-              text: "Art Quiz",
-            },
-          ])}
-          {renderSection("Popular", [
-            {
-              image: require("../assets/images/science.png"),
-              text: "Science Quiz",
-            },
-            { image: require("../assets/images/math.png"), text: "Math Quiz" },
-          ])}
-          {renderSection("New", [
-            {
-              image: require("../assets/images/history.png"),
-              text: "History Quiz",
-            },
-            {
-              image: require("../assets/images/geography.png"),
-              text: "Geography Quiz",
-            },
-          ])}
-        </ScrollView>
       </View>
+      <StatusBar barStyle="light-content" />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.sectionTitle}>Recommended</Text>
+        <View style={styles.section}>
+          <TouchableOpacity
+            onPress={() => handleNavigation("screens/LanguageQuizScreen")}
+            style={styles.touchableContainer}
+          >
+            <View style={styles.item}>
+              <Image
+                source={require("../assets/images/language.png")}
+                style={styles.image}
+              />
+              <Text style={styles.text}>Language Quiz</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleNavigation("screens/ArtQuizScreen")}
+            style={styles.touchableContainer}
+          >
+            <View style={styles.item}>
+              <Image
+                source={require("../assets/images/painting.png")}
+                style={styles.image}
+              />
+              <Text style={styles.text}>Art Quiz</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.sectionTitle}>Popular</Text>
+        <View style={styles.section}>
+          <TouchableOpacity
+            onPress={() => handleNavigation("screens/ScienceQuizScreen")}
+            style={styles.touchableContainer}
+          >
+            <View style={styles.item}>
+              <Image
+                source={require("../assets/images/science.png")}
+                style={styles.image}
+              />
+              <Text style={styles.text}>Science Quiz</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleNavigation("screens/MathQuizScreen")}
+            style={styles.touchableContainer}
+          >
+            <View style={styles.item}>
+              <Image
+                source={require("../assets/images/math.png")}
+                style={styles.image}
+              />
+              <Text style={styles.text}>Math Quiz</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.sectionTitle}>New</Text>
+        <View style={styles.section}>
+          <TouchableOpacity
+            onPress={() => handleNavigation("screens/HistoryQuizScreen")}
+            style={styles.touchableContainer}
+          >
+            <View style={styles.item}>
+              <Image
+                source={require("../assets/images/history.png")}
+                style={styles.image}
+              />
+              <Text style={styles.text}>History Quiz</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleNavigation("screens/GeographyQuizScreen")}
+            style={styles.touchableContainer}
+          >
+            <View style={styles.item}>
+              <Image
+                source={require("../assets/images/geography.png")}
+                style={styles.image}
+              />
+              <Text style={styles.text}>Geography Quiz</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
       <Navbar active="courses" />
     </SafeAreaView>
   );
@@ -178,12 +237,13 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   section: {
+    flexDirection: "row",
     marginBottom: 20,
   },
   sectionTitle: {
     color: "white",
     fontSize: 18,
-    marginBottom: 10,
+    marginHorizontal: 20,
   },
   coursesList: {
     flexDirection: "row",
@@ -211,5 +271,25 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     width: "100%",
+  },
+  touchableContainer: {
+    backgroundColor: "#f0f0f0",
+    marginBottom: 10,
+    borderRadius: 8,
+    overflow: "hidden",
+    flex: 1,
+    maxHeight: 120,
+    marginHorizontal: 20,
+  },
+  item: {
+    flexDirection: "column",
+    alignItems: "center",
+    padding: 10,
+  },
+  image: {
+    width: 80, // Adjust width as needed
+    height: 80, // Adjust height as needed
+    resizeMode: "contain", // Ensure image scales correctly
+    marginRight: 10,
   },
 });
