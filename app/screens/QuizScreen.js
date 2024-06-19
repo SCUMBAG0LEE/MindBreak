@@ -6,7 +6,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { addScore } from "../addScore";
 
-const QuizScreen = ({ questions, loading, error }) => {
+const QuizScreen = ({ questions, loading, error, subjectName }) => {
   const [answers, setAnswers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
@@ -193,7 +193,7 @@ const QuizScreen = ({ questions, loading, error }) => {
 
   const handleFinish = () => {
     // Handle quiz finish, e.g., redirect to another screen
-    addScore("test", percentScore);
+    addScore(subjectName, percentScore);
     navigation.navigate("courses");
   };
 

@@ -5,7 +5,7 @@ import withApiUrl from "./withApiUrl";
 const API_URL = "https://opentdb.com/api.php?amount=10&category=31";
 
 const LanguageQuizScreen = (props) => {
-  return <QuizScreen {...props} />;
+  return <QuizScreen {...props} subjectName="Language"/>;
 };
 
 export default withApiUrl(LanguageQuizScreen, API_URL);
