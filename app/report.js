@@ -24,7 +24,7 @@ export default function Analytics() {
   const [quizScores, setQuizScores] = useState([]);
   const router = useRouter();
   const route = useRoute();
-  const { score } = route.params;
+
   useEffect(() => {
     const getEmail = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
@@ -33,7 +33,15 @@ export default function Analytics() {
       }
     };
 
+    const loadScores = async () => {
+      const storedScores = await AsyncStorage.getItem('quizScores');
+      if (storedScores) {
+        setQuizScores(JSON.parse(storedScores));
+      }
+    };
+
     getEmail();
+    loadScores();
   }, []);
 
   function handleAvatarPress() {
@@ -73,7 +81,7 @@ export default function Analytics() {
         scores.push(generateRandomScore(), generateRandomScore());
         break;
     }
-    setQuizScores(scores);
+    // setQuizScores(scores);
   };
 
   const generateRandomScore = () => {
@@ -87,7 +95,7 @@ export default function Analytics() {
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
-  // Check if score is undefined
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -96,11 +104,6 @@ export default function Analytics() {
           <Text style={styles.subHeaderText}>
             Let's see your progress today
           </Text>
-          {score !== null ? (
-            <Text style={styles.subHeaderText}>Score from Quiz: {score}</Text>
-          ) : (
-            <Text style={styles.subHeaderText}>No score available</Text>
-          )}
         </View>
         <Image
           source={require("../assets/images/profile.png")}
@@ -137,7 +140,7 @@ export default function Analytics() {
                 labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
                 datasets: [
                   {
-                    data: quizScores,
+                    data: quizScores.map(score => score.score),
                   },
                 ],
               }}
@@ -180,20 +183,20 @@ export default function Analytics() {
 
             {quizScores.map((score, index) => (
               <View key={index} style={styles.reportCard}>
-                <Text style={styles.quizTitle}>Quiz {index + 1}</Text>
+                <Text style={styles.quizTitle}>{score.subjectName}</Text>
                 <Text
-                  style={[styles.quizScore, { color: getColorForScore(score) }]}
+                  style={[styles.quizScore, { color: getColorForScore(score.score) }]}
                 >
-                  {score}%
+                  {score.score}%
                 </Text>
                 <Text style={styles.quizDetails}>
-                  MCQ: {Math.floor(score * 0.48)}/48
+                  MCQ: {Math.floor(score.score * 0.48)}/48
                 </Text>
                 <Text style={styles.quizDetails}>
-                  Structured: {Math.floor(score * 0.15)}/15
+                  Structured: {Math.floor(score.score * 0.15)}/15
                 </Text>
                 <Text style={styles.quizDetails}>
-                  Essay: {Math.floor(score * 0.33)}/35
+                  Essay: {Math.floor(score.score * 0.33)}/35
                 </Text>
               </View>
             ))}

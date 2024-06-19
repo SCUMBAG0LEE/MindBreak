@@ -13,7 +13,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router"; // Import useRouter from Expo's router
 import Navbar from "./navbar";
 import { auth } from "./firebase.js"; // Import the auth instance
-
+import { clearQuizScores } from "./storageUtils.js";
 export default function Profile({ navigation }) {
   const [email, setEmail] = useState("");
   const router = useRouter();
@@ -61,6 +61,11 @@ export default function Profile({ navigation }) {
     );
   };
 
+  const handleClearScores = async () => {
+    await clearQuizScores();
+    setQuizScores([]); // Clear the scores in the state as well
+  };
+
   // const handleBack = () => {
   //   router.goBack();
   // };
@@ -103,6 +108,14 @@ export default function Profile({ navigation }) {
           >
             <Text style={styles.deleteText}>Delete Account</Text>
           </TouchableOpacity>
+          <View style={styles.buttonsContainer}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleClearScores}
+          >
+            <Text style={styles.deleteText}>Clear Scores</Text>
+          </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
       <Navbar active="profile" />

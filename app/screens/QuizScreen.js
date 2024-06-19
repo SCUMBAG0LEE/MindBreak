@@ -4,6 +4,7 @@ import { ProgressBar } from "react-native-paper";
 import { fetchQuestions } from "../api";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { addScore } from "../addScore";
 
 const QuizScreen = ({ questions, loading, error }) => {
   const [answers, setAnswers] = useState([]);
@@ -21,6 +22,7 @@ const QuizScreen = ({ questions, loading, error }) => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeUp, setTimeUp] = useState(false); // Add this line
   const navigation = useNavigation();
+  const percentScore = score / questions.length * 100
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -191,7 +193,8 @@ const QuizScreen = ({ questions, loading, error }) => {
 
   const handleFinish = () => {
     // Handle quiz finish, e.g., redirect to another screen
-    navigation.navigate("report", { score: score });
+    addScore("test", percentScore);
+    navigation.navigate("courses");
   };
 
   if (quizCompleted) {
@@ -202,6 +205,9 @@ const QuizScreen = ({ questions, loading, error }) => {
         </Text>
         <Text style={styles.scoreText}>
           Your Score: {score} / {questions.length}
+        </Text>
+        <Text style={styles.percentScoreText}>
+          {percentScore}% 
         </Text>
         <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
@@ -460,6 +466,12 @@ const styles = StyleSheet.create({
   scoreText: {
     color: colors.answerText,
     fontSize: 18,
+    marginBottom: 16,
+  },
+  percentScoreText: {
+    color: colors.answerText,
+    fontSize: 32,
+    fontWeight: "bold",
     marginBottom: 16,
   },
   finishButton: {
