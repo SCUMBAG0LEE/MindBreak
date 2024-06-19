@@ -11,21 +11,6 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Add this state
 
-  useEffect(() => {
-    // Listen for authentication state changes
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        // User is logged in, navigate to home directly
-        setIsLoggedIn(true);
-        router.push("/home");
-      } else {
-        setIsLoggedIn(false);
-      }
-    });
-
-    return unsubscribe; // Clean up the listener when the component unmounts
-  }, [auth, router]);
-
   const handleLogin = async () => {
     try {
       if (email === "" || password === "") {

@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native'; // Import Alert from react-native for showing warnings/alerts
