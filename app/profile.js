@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert, TextInput } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { auth } from "./firebase.js"; // Import the auth instance
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function Profile({ navigation }) {
   const [email, setEmail] = useState("");
   const router = useRouter();
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   useEffect(() => {
     const getEmail = async () => {
@@ -51,6 +54,38 @@ export default function Profile({ navigation }) {
     );
   };
 
+  const handleForgotPassword = async () => {
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      Alert.alert("Password Reset Email Sent", "Check your email to reset your password.");
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      Alert.alert("Error", "Failed to send password reset email. Please try again later.");
+    }
+  };
+  
+
+  if (isForgotPassword) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Forgot Password</Text>
+        <TextInput
+          placeholder="Enter your email"
+          style={styles.input}
+          placeholderTextColor="#bbb"
+          value={resetEmail}
+          onChangeText={setResetEmail}
+        />
+        <TouchableOpacity style={styles.loginButton} onPress={handleForgotPassword}>
+          <Text style={styles.loginText}>Send Reset Email</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.createAccountButton} onPress={() => setIsForgotPassword(false)}>
+          <Text style={styles.createAccountText}>Back to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }  
+
   return (
     <View style={styles.container}>
       <View style={styles.profileInfo}>
@@ -65,6 +100,9 @@ export default function Profile({ navigation }) {
       </TouchableOpacity>
       <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
         <Text style={styles.deleteText}>Delete Account</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.logoutButton} onPress={() => setIsForgotPassword(true)}>
+        <Text style={styles.logoutText}>Change Password</Text>
       </TouchableOpacity>
     </View>
   );

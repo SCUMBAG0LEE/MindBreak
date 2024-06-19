@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
@@ -10,6 +10,8 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Add this state
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
   const handleLogin = async () => {
     try {
@@ -38,6 +40,38 @@ export default function Login() {
       Alert.alert("Error", errorMessage);
     }
   };
+
+  const handleForgotPassword = async () => {
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      Alert.alert("Password Reset Email Sent", "Check your email to reset your password.");
+    } catch (error) {
+      console.error('Error sending password reset email:', error);
+      Alert.alert("Error", "Failed to send password reset email. Please try again later.");
+    }
+  };
+  
+
+  if (isForgotPassword) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Forgot Password</Text>
+        <TextInput
+          placeholder="Enter your email"
+          style={styles.input}
+          placeholderTextColor="#bbb"
+          value={resetEmail}
+          onChangeText={setResetEmail}
+        />
+        <TouchableOpacity style={styles.loginButton} onPress={handleForgotPassword}>
+          <Text style={styles.loginText}>Send Reset Email</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.createAccountButton} onPress={() => setIsForgotPassword(false)}>
+          <Text style={styles.createAccountText}>Back to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }  
 
   if (isLoggedIn) {
     // If user is already logged in, don't render the login form
@@ -69,7 +103,7 @@ export default function Login() {
           onChangeText={setPassword}
         />
       </View>
-      <Text style={styles.forgotPassword}>Forgot Password?</Text>
+      <Text style={styles.forgotPassword} onPress={() => setIsForgotPassword(true)}>Forgot Password?</Text>
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.createAccountButton}
