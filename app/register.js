@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,21 +15,44 @@ import {
   Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 
 export default function Register() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const auth = getAuth();
+
   const handleRegister = async () => {
-    if (username && email && password) {
-      await AsyncStorage.setItem("username", username);
-      await AsyncStorage.setItem("password", password);
+    if (!email || !password) {
+      Alert.alert("Invalid input", "Please fill all the fields");
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
       Alert.alert("Registration successful", "You can now log in");
       router.push("/login");
-    } else {
-      Alert.alert("Invalid input", "Please fill all the fields");
+    } catch (error) {
+      let errorMessage = "An error occurred. Please try again.";
+
+      if (error.code === "auth/weak-password") {
+        errorMessage = "The password is too weak.";
+      } else if (error.code === "auth/email-already-in-use") {
+        errorMessage = "The email address is already in use.";
+      } else if (error.code === "auth/invalid-email") {
+        errorMessage = "The email address is invalid.";
+      } else {
+        errorMessage = error.message;
+      }
+
+      Alert.alert("Error", errorMessage);
     }
   };
 
@@ -55,13 +77,6 @@ export default function Register() {
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Good to have you join us!</Text>
             <View style={styles.inputContainer}>
-              <TextInput
-                placeholder="Username"
-                style={styles.input}
-                placeholderTextColor="#bbb"
-                value={username}
-                onChangeText={setUsername}
-              />
               <TextInput
                 placeholder="Email"
                 style={styles.input}
