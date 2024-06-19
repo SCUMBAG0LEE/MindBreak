@@ -180,6 +180,7 @@ const reportDetails = () => {
               />
         </View>
 
+      <ScrollView>
       {/* for content stuff */}
       <View style={styles.contentContainer}>
           <View style={styles.contentHeader}>
@@ -208,6 +209,7 @@ const reportDetails = () => {
               </View>
             </View>
       </View>
+      </ScrollView>
 
     </SafeAreaView>
   )
