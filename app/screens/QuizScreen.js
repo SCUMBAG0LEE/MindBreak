@@ -202,7 +202,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
 
   const handleFinish = () => {
     // Handle quiz finish, e.g., redirect to another screen
-    addScore(subjectName, percentScore);
+    addScore(subjectName, score, questions.length);
     navigation.navigate("courses");
   };
 

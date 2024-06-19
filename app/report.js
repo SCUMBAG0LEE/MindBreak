@@ -7,6 +7,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart } from "react-native-chart-kit";
@@ -34,6 +35,7 @@ export default function Analytics() {
   const [expanded, setExpanded] = useState(false);
   const [interval, setInterval] = useState("Weekly");
   const [quizScores, setQuizScores] = useState([]);
+  const [refreshing, setRefreshing] = useState(false); // State for RefreshControl
   const router = useRouter();
   const route = useRoute();
 
@@ -45,16 +47,23 @@ export default function Analytics() {
       }
     };
 
-    const loadScores = async () => {
-      const storedScores = await AsyncStorage.getItem('quizScores');
-      if (storedScores) {
-        setQuizScores(JSON.parse(storedScores));
-      }
-    };
-
     getEmail();
     loadScores();
   }, []);
+
+  const loadScores = async () => {
+    setRefreshing(true); // Start refreshing animation
+    try {
+      const storedScores = await AsyncStorage.getItem("quizScores");
+      if (storedScores) {
+        setQuizScores(JSON.parse(storedScores));
+      }
+    } catch (error) {
+      console.error("Error loading scores:", error);
+    } finally {
+      setRefreshing(false); // End refreshing animation
+    }
+  };
 
   function handleAvatarPress() {
     if (email === "") {
@@ -108,6 +117,10 @@ export default function Analytics() {
     setExpanded(!expanded);
   };
 
+  const onRefresh = () => {
+    loadScores();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -122,7 +135,8 @@ export default function Analytics() {
           style={styles.avatar}
         />
       </View>
-      <View style={styles.intervalContainer}>
+      {!expanded && (
+        <View style={styles.intervalContainer}>
         {["Weekly", "Monthly", "Yearly"].map((int) => (
           <TouchableOpacity
             key={int}
@@ -143,16 +157,22 @@ export default function Analytics() {
           </TouchableOpacity>
         ))}
       </View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      )}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {!expanded ? (
           <View style={styles.statisticsContainer}>
-            <Text style={styles.sectionTitle}>{email}'s Statistics</Text>
+            <Text style={styles.sectionTitle}>Quiz Statistics</Text>
             <BarChart
               data={{
                 labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
                 datasets: [
                   {
-                    data: quizScores.map(score => score.score),
+                    data: quizScores.map((score) => score.score),
                   },
                 ],
               }}
@@ -173,13 +193,13 @@ export default function Analytics() {
               style={styles.chartStyle}
             />
             <Text style={styles.totalTimeText}>15h 42mins</Text>
-            <Text style={styles.encouragementText}>Good Job! Keep It Up</Text>
+            <Text style={styles.encouragementText}>Good Job! Keep it up</Text>
             <TouchableOpacity
               style={styles.detailsButton}
               onPress={toggleExpanded}
             >
               <Text style={styles.detailsButtonText}>
-                CLICK TO SEE MORE DETAILS
+                VIEW HISTORY
               </Text>
             </TouchableOpacity>
           </View>
@@ -191,24 +211,24 @@ export default function Analytics() {
             >
               <Icon name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
-            <Text style={styles.sectionTitle}>{email}'s Report</Text>
+            <Text style={styles.sectionTitle}>History</Text>
 
             {quizScores.map((score, index) => (
               <View key={index} style={styles.reportCard}>
                 <Text style={styles.quizTitle}>{score.subjectName}</Text>
                 <Text
-                  style={[styles.quizScore, { color: getColorForScore(score.score) }]}
+                  style={[
+                    styles.quizScore,
+                    { color: getColorForScore(score.score) },
+                  ]}
                 >
-                  {score.score}%
+                  {score.score / score.questionAmount * 100 }%
                 </Text>
                 <Text style={styles.quizDetails}>
-                  MCQ: {Math.floor(score.score * 0.48)}/48
+                  Correct answers: {score.score}/{score.questionAmount}
                 </Text>
                 <Text style={styles.quizDetails}>
-                  Structured: {Math.floor(score.score * 0.15)}/15
-                </Text>
-                <Text style={styles.quizDetails}>
-                  Essay: {Math.floor(score.score * 0.33)}/35
+                  Incorrect/skipped: {score.questionAmount - score.score}
                 </Text>
               </View>
             ))}
@@ -308,6 +328,7 @@ const styles = StyleSheet.create({
   detailsButtonText: {
     color: "black",
     fontSize: 14,
+    fontWeight: "bold",
   },
   reportContainer: {
     alignItems: "center",
@@ -355,4 +376,3 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 });
-
