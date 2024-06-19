@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     height: 60,
   },
   navItem: {
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   activeItem: {
-    borderTopColor: "#f15a29",
+    borderTopColor: "#FCA311",
     borderTopWidth: 6, // Increased from 5 to 8
     paddingTop: 5, // Decreased from 10 to 5
   },

@@ -34,6 +34,6 @@ export const fetchQuestions = async (apiUrl) => {
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
     }
   }
-  console.error("Max retry attempts reached. Unable to fetch questions.");
+  // console.error("Max retry attempts reached. Unable to fetch questions.");
   return []; // Return an empty array if all retry attempts fail
 };

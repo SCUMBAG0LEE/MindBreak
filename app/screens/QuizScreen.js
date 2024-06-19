@@ -56,7 +56,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
 
   useEffect(() => {
     apiUrl =
-      "https://opentdb.com/api.php?amount=10&category=31&difficulty=medium&type=multiple";
+      "";
     fetchQuestions(apiUrl)
       .then((fetchedQuestions) => {
         setQuestions(fetchedQuestions);
@@ -72,7 +72,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
       setAnswers(
         currentQuestion.answers.map((answer) => ({
           text: answer,
-          bgColor: "#422B83",
+          bgColor: colors.answerBackground,
           textColor: "#FFFFFF",
         }))
       );
@@ -123,14 +123,14 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
     }
     const updatedAnswers = answers.map((answer, idx) => ({
       ...answer,
-      bgColor: "#422B83",
+      bgColor: colors.answerBackground,
       textColor: "#FFFFFF",
     }));
 
     updatedAnswers[index] = {
       ...updatedAnswers[index],
-      bgColor: "#8543D9",
-      textColor: "#FFFFFF",
+      bgColor: colors.highlightedAnswerBackground,
+      textColor: colors.highlightedAnswerText,
     };
 
     setAnswers(updatedAnswers);
@@ -151,7 +151,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
           return {
             ...answer,
             bgColor: isCorrect ? "#FFFFFF" : "#4CAF50",
-            textColor: isCorrect ? "#8543D9" : "#FFFFFF",
+            textColor: isCorrect ? "000000" : "#FFFFFF",
           };
         } else if (index === selectedAnswerIndex && !isCorrect) {
           return { ...answer, bgColor: "#D9534F", textColor: "#FFFFFF" };
@@ -190,7 +190,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
       setAnswers(
         nextQuestion.answers.map((answer) => ({
           text: answer,
-          bgColor: "#422B83",
+          bgColor: colors.answerBackground,
           textColor: "#FFFFFF",
         }))
       );
@@ -261,22 +261,6 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error loading questions.</Text>
-      </View>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -288,7 +272,7 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
             <View style={styles.progressContainer}>
               <ProgressBar
                 progress={progress}
-                color="#8543D9"
+                color={colors.highlightedAnswerBackground}
                 style={styles.progressBar}
               />
             </View>
@@ -381,20 +365,22 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
 };
 
 const colors = {
-  primaryBackground: "#231646",
-  secondaryBackground: "#2D165B",
-  accentColor: "#8543D9",
+  primaryBackground: "#000000",
+  secondaryBackground: "#14213D",
+  accentColor: "#FCA311",
   correctAnswerBackground: "#4CAF50",
   incorrectAnswerBackground: "#D9534F",
-  answerBackground: "#422B83",
+  answerBackground: "#14213D",
+  highlightedAnswerBackground: "#FCA311",
+  highlightedAnswerText: "#000000",
   answerText: "#FFFFFF",
   timerBackground: "#FFFFFF",
-  timerText: "#422B83",
+  timerText: "#000000",
   skipText: "#FDB94B",
-  confirmButtonBackground: "#FDB94B",
-  confirmButtonText: "#361757",
-  disabledButtonBackground: "#2A1C51",
-  disabledButtonText: "#B69156",
+  confirmButtonBackground: "#FCA311",
+  confirmButtonText: "#000000",
+  disabledButtonBackground: "#14213D",
+  disabledButtonText: "#445d94",
 };
 
 const styles = StyleSheet.create({

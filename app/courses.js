@@ -188,7 +188,7 @@ const renderSection = (title, courses) => (
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "#000000",
   },
   container: {
     flex: 1,
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     padding: 10,
     borderRadius: 10,
     marginBottom: 20,

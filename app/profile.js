@@ -128,7 +128,7 @@ const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "#000000",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -185,24 +185,24 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   logoutButton: {
-    backgroundColor: "#f15a29",
+    backgroundColor: "#FCA311",
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
     marginBottom: 10,
   },
   deleteButton: {
-    backgroundColor: "#f15a29",
+    backgroundColor: "#FCA311",
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
   },
   logoutText: {
-    color: "white",
+    color: "black",
     fontSize: 16,
   },
   deleteText: {
-    color: "white",
+    color: "black",
     fontSize: 16,
   },
   navbar: {

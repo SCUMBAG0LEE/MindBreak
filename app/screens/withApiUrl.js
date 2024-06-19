@@ -23,8 +23,8 @@ const withApiUrl = (WrappedComponent, apiUrl) => {
 
     if (loading) {
       return (
-        <View style={styles.loaderContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="ffffff" />
         </View>
       );
     }
@@ -42,10 +42,11 @@ const withApiUrl = (WrappedComponent, apiUrl) => {
 };
 
 const styles = StyleSheet.create({
-  loaderContainer: {
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#000000",
   },
   errorContainer: {
     flex: 1,

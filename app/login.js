@@ -218,7 +218,7 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "black",
     width: width,
     height: height,
   },
@@ -229,13 +229,13 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
     padding: 10,
     marginLeft: 10,
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#FCA311",
     borderRadius: 5,
     position: "absolute",
     top: 60,
   },
   backButtonText: {
-    color: "white",
+    color: "black",
     fontSize: 16,
     fontWeight: "bold",
   },
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     color: "white",
     borderRadius: 10,
     padding: 15,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   createAccountButton: {
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     padding: 15,
     borderRadius: 10,
     flex: 1,
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
     color: "white",
   },
   loginButton: {
-    backgroundColor: "#f15a29",
+    backgroundColor: "#FCA311",
     padding: 15,
     borderRadius: 10,
     flex: 1,
     alignItems: "center",
   },
   loginText: {
-    color: "white",
+    color: "black",
   },
   orContinueWith: {
     color: "#bbb",
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   socialButton: {
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     padding: 10,
     borderRadius: 10,
     alignItems: "center",

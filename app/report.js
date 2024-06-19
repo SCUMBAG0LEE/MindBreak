@@ -16,6 +16,18 @@ import Navbar from "./navbar";
 import { useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
 
+// Colors stylesheet
+const colors = {
+  primaryBackground: "#000000",
+  secondaryBackground: "#14213D",
+  activeButtonColor: "#FCA311",
+  chartBackground: "#14213D",
+  chartGradientFrom: "#0c172e",
+  chartGradientTo: "#14213D",
+  positiveColor: "#80ffaa",
+  negativeColor: "#f15a29",
+};
+
 export default function Analytics() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -89,7 +101,7 @@ export default function Analytics() {
   };
 
   const getColorForScore = (score) => {
-    return score >= 50 ? "#80ffaa" : "#f15a29"; // Green if score >= 50, red otherwise
+    return score >= 50 ? colors.positiveColor : colors.negativeColor; // Green if score >= 50, red otherwise
   };
 
   const toggleExpanded = () => {
@@ -148,9 +160,9 @@ export default function Analytics() {
               height={220}
               yAxisLabel=""
               chartConfig={{
-                backgroundColor: "#1E2923",
-                backgroundGradientFrom: "#08130D",
-                backgroundGradientTo: "#08130D",
+                backgroundColor: colors.chartBackground,
+                backgroundGradientFrom: colors.chartGradientFrom,
+                backgroundGradientTo: colors.chartGradientTo,
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -213,7 +225,7 @@ const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: colors.primaryBackground,
   },
   header: {
     flexDirection: "row",
@@ -239,7 +251,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 10,
-    backgroundColor: "#4c3c90",
+    backgroundColor: colors.secondaryBackground,
   },
   intervalButton: {
     paddingVertical: 10,
@@ -251,10 +263,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   activeIntervalButton: {
-    backgroundColor: "#f15a29",
+    backgroundColor: colors.activeButtonColor,
   },
   activeIntervalButtonText: {
-    color: "#fff",
+    color: "black",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -290,11 +302,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: "#f15a29",
+    backgroundColor: colors.activeButtonColor,
     borderRadius: 20,
   },
   detailsButtonText: {
-    color: "white",
+    color: "black",
     fontSize: 14,
   },
   reportContainer: {
@@ -302,7 +314,7 @@ const styles = StyleSheet.create({
   },
   reportCard: {
     width: width - 40,
-    backgroundColor: "#000",
+    backgroundColor: "#14213D",
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
@@ -314,25 +326,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   quizScore: {
-    color: "#80ffaa",
     fontSize: 36,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center", // Center text horizontally
   },
-
   quizDetails: {
     color: "white",
     fontSize: 14,
     textAlign: "center", // Center text horizontally
   },
   moreText: {
-    color: "#f15a29",
+    color: colors.activeButtonColor,
     fontSize: 14,
     marginTop: 10,
   },
   lessText: {
-    color: "#f15a29",
+    color: colors.activeButtonColor,
     fontSize: 14,
     marginTop: 10,
   },
@@ -341,7 +351,8 @@ const styles = StyleSheet.create({
     left: 5,
     top: -5,
     padding: 10,
-    backgroundColor: "#4c3c90",
+    backgroundColor: colors.secondaryBackground,
     borderRadius: 50,
   },
 });
+
