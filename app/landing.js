@@ -1,19 +1,21 @@
 import React from "react";
+import { StatusBar } from "expo-status-bar";
 import {
-  StatusBar,
+  ScrollView,
+  View,
+  StyleSheet,
   Image,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  View,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+const { width, height } = Dimensions.get("window");
+
 const Landing = () => {
   const router = useRouter();
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -63,73 +65,74 @@ const Landing = () => {
   );
 };
 
+export default Landing;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#161622",
-    padding: 16,
   },
   scrollViewContent: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: width * 0.04,
   },
   contentContainer: {
     width: "100%",
     alignItems: "center",
   },
   logo: {
-    width: "70%", // Use percentage for responsive sizing
-    height: undefined, // Aspect ratio maintained automatically
-    aspectRatio: 1, // Adjust aspect ratio as per your logo's dimensions
-    marginTop: -100,
-    marginBottom: 20,
+    width: width * 0.6,
+    height: height * 0.2,
+    marginTop: height * -0.1,
   },
   cardsImage: {
-    width: "90%", // Use percentage for responsive sizing
-    height: undefined,
-    aspectRatio: 1.2, // Adjust aspect ratio as per your image's dimensions
-    marginBottom: 20,
+    width: "100%",
+    maxWidth: width * 0.7,
+    height: height * 0.3,
   },
   textContainer: {
+    position: "relative",
+    marginTop: height * 0.02,
     alignItems: "center",
-    marginBottom: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: width * 0.06,
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: height * 0.01,
   },
   mindBreakText: {
     color: "#1c1c84",
   },
   pathImage: {
-    width: "50%", // Use percentage for responsive sizing
-    height: 15,
-    marginBottom: 10,
+    width: width * 0.4,
+    height: height * 0.02,
+    position: "absolute",
+    bottom: -height * 0.003,
+    right: width * 0.15,
   },
   description: {
-    fontSize: 14,
+    fontSize: width * 0.035,
     color: "gray",
     textAlign: "center",
-    marginBottom: 20,
+    marginTop: height * 0.02,
   },
   buttonContainer: {
     width: "100%",
-    paddingVertical: 16,
-    height: 60,
+    marginTop: height * 0.02,
+    padding: width * 0.04,
+    height: height * 0.08,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#1c1c84",
-    borderRadius: 8,
+    borderRadius: width * 0.02,
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontWeight: "bold",
   },
 });
-
-export default Landing;

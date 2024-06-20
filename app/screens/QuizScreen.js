@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { ProgressBar } from "react-native-paper";
-import { fetchQuestions } from "../api";
-import { AntDesign } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { ProgressBar } from 'react-native-paper';
+import { fetchQuestions } from '../api';
+import { AntDesign } from '@expo/vector-icons';
 
-const QuizScreen = ({ questions, loading, error }) => {
+const QuizScreen = () => {
+  const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
@@ -16,11 +16,11 @@ const QuizScreen = ({ questions, loading, error }) => {
   const [showNextButton, setShowNextButton] = useState(false);
   const [confirmClicked, setConfirmClicked] = useState(false);
   const [answerButtonsDisabled, setAnswerButtonsDisabled] = useState(false);
-  const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [isTimerPaused, setIsTimerPaused] = useState(false); 
   const [score, setScore] = useState(0); // Score state
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeUp, setTimeUp] = useState(false); // Add this line
-  const navigation = useNavigation();
+
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -44,34 +44,30 @@ const QuizScreen = ({ questions, loading, error }) => {
   // }, []);
 
   useEffect(() => {
-    apiUrl =
-      "https://opentdb.com/api.php?amount=10&category=31&difficulty=medium&type=multiple";
-    fetchQuestions(apiUrl)
-      .then((fetchedQuestions) => {
+    fetchQuestions()
+      .then(fetchedQuestions => {
         setQuestions(fetchedQuestions);
       })
-      .catch((err) => {
-        // setError(err);
+      .catch(err => {
+        setError(err);
       });
   }, []);
 
   useEffect(() => {
     if (questions.length > 0) {
       const currentQuestion = questions[currentQuestionIndex];
-      setAnswers(
-        currentQuestion.answers.map((answer) => ({
-          text: answer,
-          bgColor: "#422B83",
-          textColor: "#FFFFFF",
-        }))
-      );
+      setAnswers(currentQuestion.answers.map(answer => ({
+        text: answer,
+        bgColor: '#422B83',
+        textColor: '#FFFFFF'
+      })));
     }
   }, [questions, currentQuestionIndex]);
 
   useEffect(() => {
     if (!isTimerPaused && !quizCompleted) {
       const timer = setInterval(() => {
-        setTimeLeft((prevTime) => prevTime - 1);
+        setTimeLeft(prevTime => prevTime - 1);
       }, 1000);
 
       if (timeLeft === 0) {
@@ -88,22 +84,16 @@ const QuizScreen = ({ questions, loading, error }) => {
   useEffect(() => {
     // Calculate progress based on currentQuestionIndex and total number of questions
     const totalQuestions = questions.length;
-    if (
-      !isNaN(currentQuestionIndex) &&
-      !isNaN(totalQuestions) &&
-      totalQuestions > 0
-    ) {
+    if (!isNaN(currentQuestionIndex) && !isNaN(totalQuestions) && totalQuestions > 0) {
       const calculatedProgress = currentQuestionIndex / totalQuestions;
       setProgress(calculatedProgress);
     }
-  }, [currentQuestionIndex, questions]);
+  }, [currentQuestionIndex, questions]);  
 
   const formatTime = (time) => {
     const minutes = Math.floor(time / 60);
     const seconds = time % 60;
-    return `${minutes < 10 ? "0" : ""}${minutes}:${
-      seconds < 10 ? "0" : ""
-    }${seconds}`;
+    return `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
   const handleAnswerSelection = (index) => {
@@ -112,14 +102,14 @@ const QuizScreen = ({ questions, loading, error }) => {
     }
     const updatedAnswers = answers.map((answer, idx) => ({
       ...answer,
-      bgColor: "#422B83",
-      textColor: "#FFFFFF",
+      bgColor: '#422B83',
+      textColor: '#FFFFFF'
     }));
 
     updatedAnswers[index] = {
       ...updatedAnswers[index],
-      bgColor: "#8543D9",
-      textColor: "#FFFFFF",
+      bgColor: '#8543D9',
+      textColor: '#FFFFFF',
     };
 
     setAnswers(updatedAnswers);
@@ -127,23 +117,17 @@ const QuizScreen = ({ questions, loading, error }) => {
 
   const handleConfirm = () => {
     if (!answerButtonsDisabled && selectedAnswerIndex !== null) {
-      const isCorrect =
-        selectedAnswerIndex ===
-        questions[currentQuestionIndex].correctAnswerIndex;
+      const isCorrect = selectedAnswerIndex === questions[currentQuestionIndex].correctAnswerIndex;
 
       if (isCorrect) {
-        setScore((prevScore) => (prevScore += 1));
+        setScore(prevScore => prevScore += 1);
       }
 
       const colorsCorrectAnswer = answers.map((answer, index) => {
         if (index === questions[currentQuestionIndex].correctAnswerIndex) {
-          return {
-            ...answer,
-            bgColor: isCorrect ? "#FFFFFF" : "#4CAF50",
-            textColor: isCorrect ? "#8543D9" : "#FFFFFF",
-          };
+          return { ...answer, bgColor: isCorrect ? '#FFFFFF' : '#4CAF50', textColor: isCorrect ? '#8543D9' : '#FFFFFF' };
         } else if (index === selectedAnswerIndex && !isCorrect) {
-          return { ...answer, bgColor: "#D9534F", textColor: "#FFFFFF" };
+          return { ...answer, bgColor: '#D9534F', textColor: '#FFFFFF' };
         } else {
           return answer;
         }
@@ -176,13 +160,11 @@ const QuizScreen = ({ questions, loading, error }) => {
       setIsTimerPaused(false);
 
       const nextQuestion = questions[nextQuestionIndex];
-      setAnswers(
-        nextQuestion.answers.map((answer) => ({
-          text: answer,
-          bgColor: "#422B83",
-          textColor: "#FFFFFF",
-        }))
-      );
+      setAnswers(nextQuestion.answers.map(answer => ({
+        text: answer,
+        bgColor: '#422B83',
+        textColor: '#FFFFFF'
+      })));
     } else {
       // Handle end of quiz
       setQuizCompleted(true);
@@ -191,18 +173,14 @@ const QuizScreen = ({ questions, loading, error }) => {
 
   const handleFinish = () => {
     // Handle quiz finish, e.g., redirect to another screen
-    navigation.navigate("report", { score: score });
+    alert("Quiz Finished!");
   };
 
   if (quizCompleted) {
     return (
       <View style={styles.completionContainer}>
-        <Text style={styles.completionText}>
-          {timeUp ? "Time's up!" : "Quiz Completed!"}
-        </Text>
-        <Text style={styles.scoreText}>
-          Your Score: {score} / {questions.length}
-        </Text>
+        <Text style={styles.completionText}>{timeUp ? "Time's up!" : "Quiz Completed!"}</Text>
+        <Text style={styles.scoreText}>Your Score: {score} / {questions.length}</Text>
         <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
@@ -210,34 +188,12 @@ const QuizScreen = ({ questions, loading, error }) => {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error loading questions.</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <ProgressBar
-        progress={progress}
-        color="#8543D9"
-        style={styles.progressBar}
-      />
+      <ProgressBar progress={progress} color="#8543D9" style={styles.progressBar} />
       {questions.length > 0 && (
         <View style={styles.questionContainer}>
-          <Text style={styles.question}>
-            {questions[currentQuestionIndex].question}
-          </Text>
+          <Text style={styles.question}>{questions[currentQuestionIndex].question}</Text>
         </View>
       )}
       <View style={styles.answersWithTimerContainer}>
@@ -253,16 +209,12 @@ const QuizScreen = ({ questions, loading, error }) => {
               onPress={() => handleAnswerSelection(index)}
               disabled={answerButtonsDisabled}
             >
-              <View
-                style={[
-                  styles.answer,
-                  selectedAnswerIndex === index ? styles.selectedAnswer : null,
-                  { backgroundColor: answer.bgColor },
-                ]}
-              >
-                <Text style={[styles.answerText, { color: answer.textColor }]}>
-                  {answer.text}
-                </Text>
+              <View style={[
+                styles.answer,
+                selectedAnswerIndex === index ? styles.selectedAnswer : null,
+                { backgroundColor: answer.bgColor },
+              ]}>
+                <Text style={[styles.answerText, { color: answer.textColor }]}>{answer.text}</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -279,26 +231,17 @@ const QuizScreen = ({ questions, loading, error }) => {
         <View style={styles.confirmButtonContainer}>
           {!showNextButton ? (
             <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                selectedAnswerIndex === null ? styles.disabledButton : null,
-              ]}
+              style={[styles.confirmButton, selectedAnswerIndex === null ? styles.disabledButton : null]}
               onPress={handleConfirm}
               disabled={selectedAnswerIndex === null || answerButtonsDisabled}
             >
-              <Text
-                style={[
-                  styles.confirmButtonText,
-                  selectedAnswerIndex === null
-                    ? styles.disabledButtonText
-                    : null,
-                ]}
-              >
-                Confirm
-              </Text>
+              <Text style={[styles.confirmButtonText, selectedAnswerIndex === null ? styles.disabledButtonText : null]}>Confirm</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={handleNext}
+            >
               <Text style={styles.nextButtonText}>Next</Text>
             </TouchableOpacity>
           )}
@@ -309,20 +252,20 @@ const QuizScreen = ({ questions, loading, error }) => {
 };
 
 const colors = {
-  primaryBackground: "#231646",
-  secondaryBackground: "#2D165B",
-  accentColor: "#8543D9",
-  correctAnswerBackground: "#4CAF50",
-  incorrectAnswerBackground: "#D9534F",
-  answerBackground: "#422B83",
-  answerText: "#FFFFFF",
-  timerBackground: "#FFFFFF",
-  timerText: "#422B83",
-  skipText: "#FDB94B",
-  confirmButtonBackground: "#FDB94B",
-  confirmButtonText: "#361757",
-  disabledButtonBackground: "#2A1C51",
-  disabledButtonText: "#B69156",
+  primaryBackground: '#231646',
+  secondaryBackground: '#2D165B',
+  accentColor: '#8543D9',
+  correctAnswerBackground: '#4CAF50',
+  incorrectAnswerBackground: '#D9534F',
+  answerBackground: '#422B83',
+  answerText: '#FFFFFF',
+  timerBackground: '#FFFFFF',
+  timerText: '#422B83',
+  skipText: '#FDB94B',
+  confirmButtonBackground: '#FDB94B',
+  confirmButtonText: '#361757',
+  disabledButtonBackground: '#2A1C51',
+  disabledButtonText: '#B69156',
 };
 
 const styles = StyleSheet.create({
@@ -339,29 +282,29 @@ const styles = StyleSheet.create({
   questionContainer: {
     flex: 1,
     backgroundColor: colors.secondaryBackground,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   question: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     color: colors.answerText,
     marginBottom: 20,
     marginHorizontal: 20,
   },
   answersWithTimerContainer: {
     flex: 1,
-    flexDirection: "column",
-    alignItems: "center",
+    flexDirection: 'column',
+    alignItems: 'center',
     marginBottom: 20,
     marginTop: 20,
   },
   answersContainer: {
     flex: 1,
     width: 350,
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
   },
   answerContainer: {
     width: 350,
@@ -371,7 +314,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 20,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
     backgroundColor: colors.answerBackground,
   },
   selectedAnswer: {
@@ -382,8 +325,8 @@ const styles = StyleSheet.create({
     color: colors.answerText,
   },
   timerContainer: {
-    flexDirection: "row",
-    alignSelf: "flex-end",
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
     columnGap: 10,
     backgroundColor: colors.timerBackground,
     paddingVertical: 10,
@@ -397,17 +340,17 @@ const styles = StyleSheet.create({
     color: colors.timerText,
   },
   buttonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginTop: 20,
     marginBottom: 20,
-    width: "90%",
-    alignSelf: "center",
+    width: '90%',
+    alignSelf: 'center',
   },
   skipButtonContainer: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
   },
   confirmButtonContainer: {
     flex: 1.5,
@@ -415,18 +358,18 @@ const styles = StyleSheet.create({
   skipText: {
     color: colors.skipText,
     fontSize: 16,
-    textDecorationLine: "underline",
+    textDecorationLine: 'underline',
   },
   confirmButton: {
     backgroundColor: colors.confirmButtonBackground,
     paddingVertical: 15,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
   confirmButtonText: {
     color: colors.confirmButtonText,
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   disabledButton: {
     backgroundColor: colors.disabledButtonBackground,
@@ -438,23 +381,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.confirmButtonBackground,
     paddingVertical: 15,
     borderRadius: 10,
-    alignItems: "center",
+    alignItems: 'center',
   },
   nextButtonText: {
     color: colors.confirmButtonText,
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   completionContainer: {
     backgroundColor: colors.primaryBackground,
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   completionText: {
     color: colors.answerText,
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 16,
   },
   scoreText: {
