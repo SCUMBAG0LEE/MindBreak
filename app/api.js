@@ -26,14 +26,14 @@ export const fetchQuestions = async (apiUrl) => {
       });
       return questions;
     } catch (error) {
-      console.error(
-        `Error fetching questions (attempt ${attempt + 1}/${MAX_RETRIES}):`,
-        error
-      );
+      // console.error(
+      //   `Error fetching questions (attempt ${attempt + 1}/${MAX_RETRIES}):`,
+      //   error
+      // );
       attempt++;
       await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY));
     }
   }
-  console.error("Max retry attempts reached. Unable to fetch questions.");
+  // console.error("Max retry attempts reached. Unable to fetch questions.");
   return []; // Return an empty array if all retry attempts fail
 };

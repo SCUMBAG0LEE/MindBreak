@@ -79,91 +79,93 @@ export default function Courses() {
             style={styles.searchIcon}
           />
         </View>
+
+        <StatusBar barStyle="light-content" />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Text style={styles.sectionTitle}>Recommended</Text>
+          <View style={styles.section}>
+            <TouchableOpacity
+              onPress={() => handleNavigation("screens/LanguageQuizScreen")}
+              style={styles.touchableContainer}
+            >
+              <View style={styles.item}>
+                <Image
+                  source={require("../assets/images/language.png")}
+                  style={styles.image}
+                />
+                <Text style={styles.text}>Language Quiz</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleNavigation("screens/ArtQuizScreen")}
+              style={styles.touchableContainer}
+            >
+              <View style={styles.item}>
+                <Image
+                  source={require("../assets/images/painting.png")}
+                  style={styles.image}
+                />
+                <Text style={styles.text}>Art Quiz</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.sectionTitle}>Popular</Text>
+          <View style={styles.section}>
+            <TouchableOpacity
+              onPress={() => handleNavigation("screens/ScienceQuizScreen")}
+              style={styles.touchableContainer}
+            >
+              <View style={styles.item}>
+                <Image
+                  source={require("../assets/images/science.png")}
+                  style={styles.image}
+                />
+                <Text style={styles.text}>Science Quiz</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleNavigation("screens/MathQuizScreen")}
+              style={styles.touchableContainer}
+            >
+              <View style={styles.item}>
+                <Image
+                  source={require("../assets/images/math.png")}
+                  style={styles.image}
+                />
+                <Text style={styles.text}>Math Quiz</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          <Text style={styles.sectionTitle}>New</Text>
+          <View style={styles.section}>
+            <TouchableOpacity
+              onPress={() => handleNavigation("screens/HistoryQuizScreen")}
+              style={styles.touchableContainer}
+            >
+              <View style={styles.item}>
+                <Image
+                  source={require("../assets/images/history.png")}
+                  style={styles.image}
+                />
+                <Text style={styles.text}>History Quiz</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleNavigation("screens/GeographyQuizScreen")}
+              style={styles.touchableContainer}
+            >
+              <View style={styles.item}>
+                <Image
+                  source={require("../assets/images/geography.png")}
+                  style={styles.image}
+                />
+                <Text style={styles.text}>Geography Quiz</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
       </View>
-      <StatusBar barStyle="light-content" />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.sectionTitle}>Recommended</Text>
-        <View style={styles.section}>
-          <TouchableOpacity
-            onPress={() => handleNavigation("screens/LanguageQuizScreen")}
-            style={styles.touchableContainer}
-          >
-            <View style={styles.item}>
-              <Image
-                source={require("../assets/images/language.png")}
-                style={styles.image}
-              />
-              <Text style={styles.text}>Language Quiz</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleNavigation("screens/ArtQuizScreen")}
-            style={styles.touchableContainer}
-          >
-            <View style={styles.item}>
-              <Image
-                source={require("../assets/images/painting.png")}
-                style={styles.image}
-              />
-              <Text style={styles.text}>Art Quiz</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.sectionTitle}>Popular</Text>
-        <View style={styles.section}>
-          <TouchableOpacity
-            onPress={() => handleNavigation("screens/ScienceQuizScreen")}
-            style={styles.touchableContainer}
-          >
-            <View style={styles.item}>
-              <Image
-                source={require("../assets/images/science.png")}
-                style={styles.image}
-              />
-              <Text style={styles.text}>Science Quiz</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleNavigation("screens/MathQuizScreen")}
-            style={styles.touchableContainer}
-          >
-            <View style={styles.item}>
-              <Image
-                source={require("../assets/images/math.png")}
-                style={styles.image}
-              />
-              <Text style={styles.text}>Math Quiz</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.sectionTitle}>New</Text>
-        <View style={styles.section}>
-          <TouchableOpacity
-            onPress={() => handleNavigation("screens/HistoryQuizScreen")}
-            style={styles.touchableContainer}
-          >
-            <View style={styles.item}>
-              <Image
-                source={require("../assets/images/history.png")}
-                style={styles.image}
-              />
-              <Text style={styles.text}>History Quiz</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleNavigation("screens/GeographyQuizScreen")}
-            style={styles.touchableContainer}
-          >
-            <View style={styles.item}>
-              <Image
-                source={require("../assets/images/geography.png")}
-                style={styles.image}
-              />
-              <Text style={styles.text}>Geography Quiz</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+
       <Navbar active="courses" />
     </SafeAreaView>
   );
@@ -186,7 +188,7 @@ const renderSection = (title, courses) => (
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "#000000",
   },
   container: {
     flex: 1,
@@ -220,7 +222,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     padding: 10,
     borderRadius: 10,
     marginBottom: 20,
@@ -244,6 +246,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 18,
     marginHorizontal: 20,
+    marginVertical: 10,
   },
   coursesList: {
     flexDirection: "row",

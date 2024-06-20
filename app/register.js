@@ -16,12 +16,15 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
 
 export default function Register() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const auth = getAuth();
 
   const handleRegister = async () => {
@@ -36,7 +39,8 @@ export default function Register() {
         email,
         password
       );
-      const user = userCredential.user;
+      const user = userCredential.user; // Capture the user object here
+
       Alert.alert("Registration successful", "You can now log in");
       router.push("/login");
     } catch (error) {
@@ -113,7 +117,7 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "black",
     alignItems: "center",
     justifyContent: "center",
     width: width,

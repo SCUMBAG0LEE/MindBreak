@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart } from "react-native-chart-kit";
@@ -16,27 +17,100 @@ import Navbar from "./navbar";
 import { useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
 
+const colors = {
+  primaryBackground: "#000000",
+  secondaryBackground: "#14213D",
+  activeButtonColor: "#FCA311",
+  chartBackground: "#14213D",
+  chartGradientFrom: "#0c172e",
+  chartGradientTo: "#14213D",
+  positiveColor: "#80ffaa",
+  negativeColor: "#f15a29",
+};
+
 export default function Analytics() {
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [interval, setInterval] = useState("Weekly");
-  const [userUsageTime, setUserUsageTime] = useState("");
-  const [quizSubject, setQuizSubject] = useState("");
   const [quizScores, setQuizScores] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+  const [lastResetDate, setLastResetDate] = useState(null);
+  const startTimeRef = useRef(new Date().getTime());
   const router = useRouter();
   const route = useRoute();
-  const { score } = route.params;
+
+  // Load data from AsyncStorage on mount
   useEffect(() => {
-    const getEmail = async () => {
+    const initializeData = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
-      if (storedEmail) {
-        setEmail(storedEmail);
-      }
+      if (storedEmail) setEmail(storedEmail);
+
+      const storedTime = await AsyncStorage.getItem("totalTimeSpent");
+      if (storedTime) setTotalTimeSpent(parseInt(storedTime, 10));
+
+      const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
+      if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
+
+      loadScores();
     };
 
-    getEmail();
+    initializeData();
   }, []);
+
+  // Set up interval for updating time spent
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const currentTime = new Date().getTime();
+      const elapsedTime = currentTime - startTimeRef.current;
+      setTotalTimeSpent((prevTime) => prevTime + elapsedTime);
+      startTimeRef.current = currentTime;
+
+      // Daily reset logic
+      const now = new Date();
+      if (lastResetDate) {
+        const lastReset = new Date(lastResetDate);
+        if (
+          now.getDate() !== lastReset.getDate() ||
+          now.getMonth() !== lastReset.getMonth() ||
+          now.getFullYear() !== lastReset.getFullYear()
+        ) {
+          setTotalTimeSpent(0);
+          setLastResetDate(now);
+          AsyncStorage.setItem("totalTimeSpent", "0");
+          AsyncStorage.setItem("lastResetDate", now.toISOString());
+        }
+      } else {
+        setLastResetDate(now);
+      }
+    }, 1000); // Update every second
+
+    return () => clearInterval(timer); // Cleanup on component unmount
+  }, [lastResetDate]);
+
+  // Save total time spent to AsyncStorage whenever it changes
+  useEffect(() => {
+    const saveData = async () => {
+      await AsyncStorage.setItem("totalTimeSpent", totalTimeSpent.toString());
+      await AsyncStorage.setItem("lastResetDate", new Date().toISOString());
+    };
+
+    saveData();
+  }, [totalTimeSpent]);
+
+  const loadScores = async () => {
+    setRefreshing(true);
+    try {
+      const storedScores = await AsyncStorage.getItem("quizScores");
+      if (storedScores) {
+        setQuizScores(JSON.parse(storedScores));
+      }
+    } catch (error) {
+      console.error("Error loading scores:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   function handleAvatarPress() {
     if (email === "") {
@@ -49,19 +123,6 @@ export default function Analytics() {
   useEffect(() => {
     generateRandomScores();
   }, [interval]);
-
-  useEffect(() => {
-    const generateUsageTime = () => {
-      const hours = Math.floor(Math.random() * 24);
-      const minutes = Math.floor(Math.random() * 60);
-      const formattedHours = hours < 10? `0${hours}` : `${hours}`;
-      const formattedMinutes = minutes < 10? `0${minutes}` : `${minutes}`;
-      const usageTime = `${formattedHours}h ${formattedMinutes}m`;
-      setUserUsageTime(usageTime);
-    };
-    generateUsageTime();
-  }, []);
-
 
   const generateRandomScores = () => {
     const scores = [];
@@ -88,71 +149,79 @@ export default function Analytics() {
         scores.push(generateRandomScore(), generateRandomScore());
         break;
     }
-    setQuizScores(scores);
   };
 
   const generateRandomScore = () => {
-    return Math.floor(Math.random() * 101); // Generate random score between 0 to 100
+    return Math.floor(Math.random() * 101);
   };
 
   const getColorForScore = (score) => {
-    return score >= 50 ? "#80ffaa" : "#f15a29"; // Green if score >= 50, red otherwise
+    return score >= 50 ? colors.positiveColor : colors.negativeColor;
   };
 
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
-  // Check if score is undefined
+
+  const onRefresh = () => {
+    loadScores();
+  };
+
+  const formattedTime = Math.floor(totalTimeSpent / 60000); // Convert to minutes
+  const progressWidth = (formattedTime / 60) * 100; // Calculate percentage
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerText}>Welcome, {username}!</Text>
+          <Text style={styles.headerText}>Welcome, {email}!</Text>
           <Text style={styles.subHeaderText}>
             Let's see your progress today
           </Text>
-          {score !== null ? (
-            <Text style={styles.subHeaderText}>Score from Quiz: {score}</Text>
-          ) : (
-            <Text style={styles.subHeaderText}>No score available</Text>
-          )}
         </View>
         <Image
           source={require("../assets/images/profile.png")}
           style={styles.avatar}
         />
       </View>
-      <View style={styles.intervalContainer}>
-        {["Weekly", "Monthly", "Yearly"].map((int) => (
-          <TouchableOpacity
-            key={int}
-            style={[
-              styles.intervalButton,
-              interval === int && styles.activeIntervalButton,
-            ]}
-            onPress={() => setInterval(int)}
-          >
-            <Text
+      {!expanded && (
+        <View style={styles.intervalContainer}>
+          {["Weekly", "Monthly", "Yearly"].map((int) => (
+            <TouchableOpacity
+              key={int}
               style={[
-                styles.intervalButtonText,
-                interval === int && styles.activeIntervalButtonText,
+                styles.intervalButton,
+                interval === int && styles.activeIntervalButton,
               ]}
+              onPress={() => setInterval(int)}
             >
-              {int}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+              <Text
+                style={[
+                  styles.intervalButtonText,
+                  interval === int && styles.activeIntervalButtonText,
+                ]}
+              >
+                {int}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {!expanded ? (
           <View style={styles.statisticsContainer}>
-            <Text style={styles.sectionTitle}>{username}'s Statistics</Text>
+            <Text style={styles.sectionTitle}>Quiz Statistics</Text>
             <BarChart
               data={{
                 labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
                 datasets: [
                   {
-                    data: quizScores,
+                    data: quizScores.map((score) => score.score),
                   },
                 ],
               }}
@@ -160,9 +229,9 @@ export default function Analytics() {
               height={220}
               yAxisLabel=""
               chartConfig={{
-                backgroundColor: "#1E2923",
-                backgroundGradientFrom: "#08130D",
-                backgroundGradientTo: "#08130D",
+                backgroundColor: colors.chartBackground,
+                backgroundGradientFrom: colors.chartGradientFrom,
+                backgroundGradientTo: colors.chartGradientTo,
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -172,43 +241,41 @@ export default function Analytics() {
               }}
               style={styles.chartStyle}
             />
-            <Text style={styles.totalTimeText}>{userUsageTime}</Text>
-            <Text style={styles.encouragementText}>Good Job! Keep It Up</Text>
+            <Text style={styles.totalTimeText}>
+              {formattedTime} min / 60 min
+            </Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progress, { width: `${progressWidth}%` }]} />
+            </View>
             <TouchableOpacity
               style={styles.detailsButton}
               onPress={toggleExpanded}
             >
-              <Text style={styles.detailsButtonText}>
-                CLICK TO SEE MORE DETAILS
-              </Text>
+              <Text style={styles.detailsButtonText}>See Details</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.reportContainer}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={toggleExpanded}
-            >
-              <Icon name="arrow-left" size={24} color="white" />
+            <TouchableOpacity style={styles.backButton} onPress={toggleExpanded}>
+              <Icon name="chevron-left" size={20} color="white" />
             </TouchableOpacity>
-            <Text style={styles.sectionTitle}>{email}'s Report</Text>
-
+            <Text style={styles.sectionTitle}>Detailed Report</Text>
             {quizScores.map((score, index) => (
               <View key={index} style={styles.reportCard}>
-                <Text style={styles.quizTitle}>Quiz {index + 1}</Text>
+                <Text style={styles.quizTitle}>{score.subjectName}</Text>
                 <Text
-                  style={[styles.quizScore, { color: getColorForScore(score) }]}
+                  style={[
+                    styles.quizScore,
+                    { color: getColorForScore(score.score) },
+                  ]}
                 >
-                  {score}%
+                  {(score.score / score.questionAmount) * 100}%
                 </Text>
                 <Text style={styles.quizDetails}>
-                  MCQ: {Math.floor(score * 0.48)}/48
+                  Correct answers: {score.score}/{score.questionAmount}
                 </Text>
                 <Text style={styles.quizDetails}>
-                  Structured: {Math.floor(score * 0.15)}/15
-                </Text>
-                <Text style={styles.quizDetails}>
-                  Essay: {Math.floor(score * 0.33)}/35
+                  Incorrect/skipped: {score.questionAmount - score.score}
                 </Text>
               </View>
             ))}
@@ -225,7 +292,7 @@ const { width } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: colors.primaryBackground,
   },
   header: {
     flexDirection: "row",
@@ -251,7 +318,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 10,
-    backgroundColor: "#4c3c90",
+    backgroundColor: colors.secondaryBackground,
   },
   intervalButton: {
     paddingVertical: 10,
@@ -263,10 +330,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   activeIntervalButton: {
-    backgroundColor: "#f15a29",
+    backgroundColor: colors.activeButtonColor,
   },
   activeIntervalButtonText: {
-    color: "#fff",
+    color: "black",
   },
   scrollContainer: {
     flexGrow: 1,
@@ -293,28 +360,35 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 10,
   },
-  encouragementText: {
-    color: "white",
-    fontSize: 16,
-    marginTop: 5,
+  progressBar: {
+    height: 8,
+    backgroundColor: "#FCA311",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  progress: {
+    height: "100%",
+    backgroundColor: "#f15a29",
   },
   detailsButton: {
     marginTop: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: "#f15a29",
+    backgroundColor: colors.activeButtonColor,
     borderRadius: 20,
   },
   detailsButtonText: {
-    color: "white",
+    color: "black",
     fontSize: 14,
+    fontWeight: "bold",
   },
   reportContainer: {
     alignItems: "center",
   },
   reportCard: {
     width: width - 40,
-    backgroundColor: "#000",
+    backgroundColor: "#14213D",
     borderRadius: 10,
     padding: 20,
     marginBottom: 20,
@@ -326,25 +400,23 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   quizScore: {
-    color: "#80ffaa",
     fontSize: 36,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center", // Center text horizontally
   },
-
   quizDetails: {
     color: "white",
     fontSize: 14,
     textAlign: "center", // Center text horizontally
   },
   moreText: {
-    color: "#f15a29",
+    color: colors.activeButtonColor,
     fontSize: 14,
     marginTop: 10,
   },
   lessText: {
-    color: "#f15a29",
+    color: colors.activeButtonColor,
     fontSize: 14,
     marginTop: 10,
   },
@@ -353,7 +425,7 @@ const styles = StyleSheet.create({
     left: 5,
     top: -5,
     padding: 10,
-    backgroundColor: "#4c3c90",
+    backgroundColor: colors.secondaryBackground,
     borderRadius: 50,
   },
 });

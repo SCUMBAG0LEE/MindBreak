@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+  BackHandler
+} from "react-native";
 import { ProgressBar } from "react-native-paper";
 import { fetchQuestions } from "../api";
 import { AntDesign } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { addScore } from "../addScore";
 
-const QuizScreen = ({ questions, loading, error }) => {
+const QuizScreen = ({ questions, loading, error, subjectName }) => {
   const [answers, setAnswers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswerIndex, setSelectedAnswerIndex] = useState(null);
@@ -21,6 +31,7 @@ const QuizScreen = ({ questions, loading, error }) => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeUp, setTimeUp] = useState(false); // Add this line
   const navigation = useNavigation();
+  const percentScore = (score / questions.length) * 100;
 
   // useEffect(() => {
   //   const initialQuestions = [
@@ -45,7 +56,7 @@ const QuizScreen = ({ questions, loading, error }) => {
 
   useEffect(() => {
     apiUrl =
-      "https://opentdb.com/api.php?amount=10&category=31&difficulty=medium&type=multiple";
+      "";
     fetchQuestions(apiUrl)
       .then((fetchedQuestions) => {
         setQuestions(fetchedQuestions);
@@ -61,7 +72,7 @@ const QuizScreen = ({ questions, loading, error }) => {
       setAnswers(
         currentQuestion.answers.map((answer) => ({
           text: answer,
-          bgColor: "#422B83",
+          bgColor: colors.answerBackground,
           textColor: "#FFFFFF",
         }))
       );
@@ -112,14 +123,14 @@ const QuizScreen = ({ questions, loading, error }) => {
     }
     const updatedAnswers = answers.map((answer, idx) => ({
       ...answer,
-      bgColor: "#422B83",
+      bgColor: colors.answerBackground,
       textColor: "#FFFFFF",
     }));
 
     updatedAnswers[index] = {
       ...updatedAnswers[index],
-      bgColor: "#8543D9",
-      textColor: "#FFFFFF",
+      bgColor: colors.highlightedAnswerBackground,
+      textColor: colors.highlightedAnswerText,
     };
 
     setAnswers(updatedAnswers);
@@ -140,7 +151,7 @@ const QuizScreen = ({ questions, loading, error }) => {
           return {
             ...answer,
             bgColor: isCorrect ? "#FFFFFF" : "#4CAF50",
-            textColor: isCorrect ? "#8543D9" : "#FFFFFF",
+            textColor: isCorrect ? "000000" : "#FFFFFF",
           };
         } else if (index === selectedAnswerIndex && !isCorrect) {
           return { ...answer, bgColor: "#D9534F", textColor: "#FFFFFF" };
@@ -179,7 +190,7 @@ const QuizScreen = ({ questions, loading, error }) => {
       setAnswers(
         nextQuestion.answers.map((answer) => ({
           text: answer,
-          bgColor: "#422B83",
+          bgColor: colors.answerBackground,
           textColor: "#FFFFFF",
         }))
       );
@@ -191,8 +202,47 @@ const QuizScreen = ({ questions, loading, error }) => {
 
   const handleFinish = () => {
     // Handle quiz finish, e.g., redirect to another screen
-    navigation.navigate("report", { score: score });
+    addScore(subjectName, score, questions.length);
+    navigation.navigate("courses");
   };
+
+  const handleExitQuiz = () => {
+    Alert.alert(
+      "Exit Quiz",
+      "Are you sure you want to exit the quiz?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Exit",
+          onPress: () => {
+            // Handle exiting the quiz
+            navigation.navigate("courses"); // Redirect to courses screen
+          },
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  useEffect(() => {
+    const backAction = () => {
+      if (!quizCompleted) {
+        handleExitQuiz();
+        return true; // Prevent default behavior (exit app)
+      }
+      return false; // Default behavior (back to previous screen)
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, [quizCompleted]);
 
   if (quizCompleted) {
     return (
@@ -203,6 +253,7 @@ const QuizScreen = ({ questions, loading, error }) => {
         <Text style={styles.scoreText}>
           Your Score: {score} / {questions.length}
         </Text>
+        <Text style={styles.percentScoreText}>{percentScore}%</Text>
         <TouchableOpacity style={styles.finishButton} onPress={handleFinish}>
           <Text style={styles.finishButtonText}>Finish</Text>
         </TouchableOpacity>
@@ -210,125 +261,145 @@ const QuizScreen = ({ questions, loading, error }) => {
     );
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error loading questions.</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <ProgressBar
-        progress={progress}
-        color="#8543D9"
-        style={styles.progressBar}
-      />
-      {questions.length > 0 && (
-        <View style={styles.questionContainer}>
-          <Text style={styles.question}>
-            {questions[currentQuestionIndex].question}
-          </Text>
-        </View>
-      )}
-      <View style={styles.answersWithTimerContainer}>
-        <View style={styles.timerContainer}>
-          <AntDesign name="clockcircleo" size={24} color="#422B83" />
-          <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-        </View>
-        <View style={styles.answersContainer}>
-          {answers.map((answer, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.answerContainer}
-              onPress={() => handleAnswerSelection(index)}
-              disabled={answerButtonsDisabled}
-            >
-              <View
-                style={[
-                  styles.answer,
-                  selectedAnswerIndex === index ? styles.selectedAnswer : null,
-                  { backgroundColor: answer.bgColor },
-                ]}
-              >
-                <Text style={[styles.answerText, { color: answer.textColor }]}>
-                  {answer.text}
-                </Text>
-              </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity style={styles.backButton} onPress={handleExitQuiz}>
+              <Text style={styles.backButtonText}>Exit</Text>
             </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-      <View style={styles.buttonContainer}>
-        {confirmClicked ? null : ( // Render only if confirm button is not clicked
-          <View style={styles.skipButtonContainer}>
-            <TouchableOpacity onPress={handleSkip}>
-              <Text style={styles.skipText}>Skip</Text>
-            </TouchableOpacity>
+            <View style={styles.progressContainer}>
+              <ProgressBar
+                progress={progress}
+                color={colors.highlightedAnswerBackground}
+                style={styles.progressBar}
+              />
+            </View>
           </View>
-        )}
-        <View style={styles.confirmButtonContainer}>
-          {!showNextButton ? (
-            <TouchableOpacity
-              style={[
-                styles.confirmButton,
-                selectedAnswerIndex === null ? styles.disabledButton : null,
-              ]}
-              onPress={handleConfirm}
-              disabled={selectedAnswerIndex === null || answerButtonsDisabled}
-            >
-              <Text
-                style={[
-                  styles.confirmButtonText,
-                  selectedAnswerIndex === null
-                    ? styles.disabledButtonText
-                    : null,
-                ]}
-              >
-                Confirm
+
+          {questions.length > 0 && (
+            <View style={styles.questionContainer}>
+              <Text style={styles.question}>
+                {questions[currentQuestionIndex].question}
               </Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-              <Text style={styles.nextButtonText}>Next</Text>
-            </TouchableOpacity>
+            </View>
           )}
+          <View style={styles.answersWithTimerContainer}>
+            <View style={styles.timerContainer}>
+              <AntDesign name="clockcircleo" size={24} color="#422B83" />
+              <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+            </View>
+            <View style={styles.answersContainer}>
+              {answers.map((answer, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.answerContainer}
+                  onPress={() => handleAnswerSelection(index)}
+                  disabled={answerButtonsDisabled}
+                >
+                  <View
+                    style={[
+                      styles.answer,
+                      selectedAnswerIndex === index
+                        ? styles.selectedAnswer
+                        : null,
+                      { backgroundColor: answer.bgColor },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.answerText, { color: answer.textColor }]}
+                    >
+                      {answer.text}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+          <View style={styles.buttonContainer}>
+            {confirmClicked ? null : ( // Render only if confirm button is not clicked
+              <View style={styles.skipButtonContainer}>
+                <TouchableOpacity onPress={handleSkip}>
+                  <Text style={styles.skipText}>Skip</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={styles.confirmButtonContainer}>
+              {!showNextButton ? (
+                <TouchableOpacity
+                  style={[
+                    styles.confirmButton,
+                    selectedAnswerIndex === null ? styles.disabledButton : null,
+                  ]}
+                  onPress={handleConfirm}
+                  disabled={
+                    selectedAnswerIndex === null || answerButtonsDisabled
+                  }
+                >
+                  <Text
+                    style={[
+                      styles.confirmButtonText,
+                      selectedAnswerIndex === null
+                        ? styles.disabledButtonText
+                        : null,
+                    ]}
+                  >
+                    Confirm
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.nextButton}
+                  onPress={handleNext}
+                >
+                  <Text style={styles.nextButtonText}>Next</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const colors = {
-  primaryBackground: "#231646",
-  secondaryBackground: "#2D165B",
-  accentColor: "#8543D9",
+  primaryBackground: "#000000",
+  secondaryBackground: "#14213D",
+  accentColor: "#FCA311",
   correctAnswerBackground: "#4CAF50",
   incorrectAnswerBackground: "#D9534F",
-  answerBackground: "#422B83",
+  answerBackground: "#14213D",
+  highlightedAnswerBackground: "#FCA311",
+  highlightedAnswerText: "#000000",
   answerText: "#FFFFFF",
   timerBackground: "#FFFFFF",
-  timerText: "#422B83",
+  timerText: "#000000",
   skipText: "#FDB94B",
-  confirmButtonBackground: "#FDB94B",
-  confirmButtonText: "#361757",
-  disabledButtonBackground: "#2A1C51",
-  disabledButtonText: "#B69156",
+  confirmButtonBackground: "#FCA311",
+  confirmButtonText: "#000000",
+  disabledButtonBackground: "#14213D",
+  disabledButtonText: "#445d94",
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: colors.primaryBackground,
+  },
+  container: {
+    flex: 1,
+    paddingTop: 20,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    margin: 20,
+  },
+  progressContainer: {
+    flex: 1,
+    justifyContent: "center",
   },
   progressBar: {
     backgroundColor: colors.secondaryBackground,
@@ -336,6 +407,21 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 5,
   },
+  backButton: {
+    flex: 0.2,
+    backgroundColor: colors.confirmButtonBackground,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    alignSelf: "center",
+  },
+  backButtonText: {
+    color: colors.confirmButtonText,
+    fontSize: 16,
+    fontWeight: "bold",
+    alignSelf: "center",
+  },
+
   questionContainer: {
     flex: 1,
     backgroundColor: colors.secondaryBackground,
@@ -462,6 +548,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 16,
   },
+  percentScoreText: {
+    color: colors.answerText,
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 16,
+  },
   finishButton: {
     backgroundColor: colors.confirmButtonBackground,
     padding: 16,
@@ -470,6 +562,10 @@ const styles = StyleSheet.create({
   finishButtonText: {
     color: colors.confirmButtonText,
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
 });
 
