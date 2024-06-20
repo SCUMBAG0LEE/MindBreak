@@ -18,5 +18,6 @@ export default function Index() {
     checkLoginStatus();
   }, []);
 
-  return isLoggedIn ? <Redirect href="/home" /> : <Redirect href="/landing" />;
+  return isLoggedIn ? <Redirect href="/home" /> : <Redirect href="/report" />;
 }
+// "/landing"

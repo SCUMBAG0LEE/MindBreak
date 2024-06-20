@@ -20,6 +20,8 @@ export default function Analytics() {
   const [email, setEmail] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [interval, setInterval] = useState("Weekly");
+  const [userUsageTime, setUserUsageTime] = useState("");
+  const [quizSubject, setQuizSubject] = useState("");
   const [quizScores, setQuizScores] = useState([]);
   const router = useRouter();
 
@@ -45,6 +47,19 @@ export default function Analytics() {
   useEffect(() => {
     generateRandomScores();
   }, [interval]);
+
+  useEffect(() => {
+    const generateUsageTime = () => {
+      const hours = Math.floor(Math.random() * 24);
+      const minutes = Math.floor(Math.random() * 60);
+      const formattedHours = hours < 10? `0${hours}` : `${hours}`;
+      const formattedMinutes = minutes < 10? `0${minutes}` : `${minutes}`;
+      const usageTime = `${formattedHours}h ${formattedMinutes}m`;
+      setUserUsageTime(usageTime);
+    };
+    generateUsageTime();
+  }, []);
+
 
   const generateRandomScores = () => {
     const scores = [];
@@ -90,7 +105,7 @@ export default function Analytics() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerText}>Welcome, {email}!</Text>
+          <Text style={styles.headerText}>Welcome, {username}!</Text>
           <Text style={styles.subHeaderText}>
             Let's see your progress today
           </Text>
@@ -124,7 +139,7 @@ export default function Analytics() {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {!expanded ? (
           <View style={styles.statisticsContainer}>
-            <Text style={styles.sectionTitle}>{email}'s Statistics</Text>
+            <Text style={styles.sectionTitle}>{username}'s Statistics</Text>
             <BarChart
               data={{
                 labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -150,7 +165,7 @@ export default function Analytics() {
               }}
               style={styles.chartStyle}
             />
-            <Text style={styles.totalTimeText}>15h 42mins</Text>
+            <Text style={styles.totalTimeText}>{userUsageTime}</Text>
             <Text style={styles.encouragementText}>Good Job! Keep It Up</Text>
             <TouchableOpacity
               style={styles.detailsButton}
