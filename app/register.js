@@ -16,16 +16,32 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
 
 export default function Register() {
   const router = useRouter();
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const auth = getAuth();
 
+  // Function to handle profile picture upload
+  const handleProfilePictureUpload = async (user, imageUri) => {
+    try {
+      const storageRef = ref(storage, `profile_pictures/${user.uid}`);
+      await uploadBytes(storageRef, imageUri);
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL; // Return the download URL
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      throw error; // Propagate the error
+    }
+  };
+
   const handleRegister = async () => {
-    if (!email || !password) {
+    if (!email || !password || !username) {
       Alert.alert("Invalid input", "Please fill all the fields");
       return;
     }
@@ -36,7 +52,23 @@ export default function Register() {
         email,
         password
       );
-      const user = userCredential.user;
+      const user = userCredential.user; // Capture the user object here
+
+      try {
+        // After profile picture upload is successful, update Firestore document
+        const imageUrl = await handleProfilePictureUpload(user);
+        await setDoc(doc(db, "users", user.uid), {
+          username: username,
+          email: email,
+          pfp: imageUrl, // Use the downloaded URL
+        });
+
+        console.log("Firestore document updated successfully.");
+      } catch (error) {
+        console.error("Error updating Firestore document:", error);
+        // Handle error if needed
+      }
+
       Alert.alert("Registration successful", "You can now log in");
       router.push("/login");
     } catch (error) {
@@ -113,7 +145,7 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "black",
     alignItems: "center",
     justifyContent: "center",
     width: width,

@@ -36,6 +36,8 @@ export default function Analytics() {
   const [interval, setInterval] = useState("Weekly");
   const [quizScores, setQuizScores] = useState([]);
   const [refreshing, setRefreshing] = useState(false); // State for RefreshControl
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0); // New state for tracking time
+  const [startTime, setStartTime] = useState(new Date().getTime()); // New state for tracking time
   const router = useRouter();
   const route = useRoute();
 
@@ -49,6 +51,16 @@ export default function Analytics() {
 
     getEmail();
     loadScores();
+
+    // Start tracking time
+    const timer = setInterval(() => {
+      const currentTime = new Date().getTime();
+      const elapsedTime = currentTime - startTime;
+      setTotalTimeSpent((prevTime) => prevTime + elapsedTime);
+      setStartTime(currentTime);
+    }, 60000); // Update every minute (60000 milliseconds)
+
+    return () => clearInterval(timer); // Clean up interval on component unmount
   }, []);
 
   const loadScores = async () => {
@@ -121,6 +133,9 @@ export default function Analytics() {
     loadScores();
   };
 
+  const formattedTime = Math.floor(totalTimeSpent / 60000); // Convert to minutes
+  const progressWidth = (formattedTime / 60) * 100; // Calculate percentage
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -137,26 +152,26 @@ export default function Analytics() {
       </View>
       {!expanded && (
         <View style={styles.intervalContainer}>
-        {["Weekly", "Monthly", "Yearly"].map((int) => (
-          <TouchableOpacity
-            key={int}
-            style={[
-              styles.intervalButton,
-              interval === int && styles.activeIntervalButton,
-            ]}
-            onPress={() => setInterval(int)}
-          >
-            <Text
+          {["Weekly", "Monthly", "Yearly"].map((int) => (
+            <TouchableOpacity
+              key={int}
               style={[
-                styles.intervalButtonText,
-                interval === int && styles.activeIntervalButtonText,
+                styles.intervalButton,
+                interval === int && styles.activeIntervalButton,
               ]}
+              onPress={() => setInterval(int)}
             >
-              {int}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Text
+                style={[
+                  styles.intervalButtonText,
+                  interval === int && styles.activeIntervalButtonText,
+                ]}
+              >
+                {int}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       )}
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -192,15 +207,17 @@ export default function Analytics() {
               }}
               style={styles.chartStyle}
             />
-            <Text style={styles.totalTimeText}>15h 42mins</Text>
-            <Text style={styles.encouragementText}>Good Job! Keep it up</Text>
+            <Text style={styles.totalTimeText}>
+              {formattedTime} min / 60 min
+            </Text>
+            <View style={styles.progressBar}>
+              <View style={[styles.progress, { width: `${progressWidth}%` }]} />
+            </View>
             <TouchableOpacity
               style={styles.detailsButton}
               onPress={toggleExpanded}
             >
-              <Text style={styles.detailsButtonText}>
-                VIEW HISTORY
-              </Text>
+              <Text style={styles.detailsButtonText}>VIEW HISTORY</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -222,7 +239,7 @@ export default function Analytics() {
                     { color: getColorForScore(score.score) },
                   ]}
                 >
-                  {score.score / score.questionAmount * 100 }%
+                  {(score.score / score.questionAmount) * 100}%
                 </Text>
                 <Text style={styles.quizDetails}>
                   Correct answers: {score.score}/{score.questionAmount}
@@ -312,6 +329,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginTop: 10,
+  },
+  progressBar: {
+    height: 8,
+    backgroundColor: "#FCA311",
+    borderRadius: 4,
+    overflow: "hidden",
+    marginBottom: 8,
+  },
+  progress: {
+    height: "100%",
+    backgroundColor: "#f15a29",
   },
   encouragementText: {
     color: "white",

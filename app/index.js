@@ -1,16 +1,19 @@
+// Index.js
+
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
 
 export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sessionDuration, setSessionDuration] = useState(0);
 
   useEffect(() => {
     const checkLoginStatus = async () => {
-      const username = await AsyncStorage.getItem("username");
-      const password = await AsyncStorage.getItem("password");
+      const email = await AsyncStorage.getItem("email");
 
-      if (username && password) {
+      if (email) {
         setIsLoggedIn(true);
       }
     };
@@ -18,5 +21,34 @@ export default function Index() {
     checkLoginStatus();
   }, []);
 
-  return isLoggedIn ? <Redirect href="/home" /> : <Redirect href="/landing" />;
+  useEffect(() => {
+    const startSession = async () => {
+      const startTime = new Date().getTime();
+      setSessionStartTime(startTime);
+      await AsyncStorage.setItem("sessionStartTime", startTime.toString());
+    };
+
+    startSession();
+  }, []);
+
+  useEffect(() => {
+    const calculateSessionDuration = async () => {
+      const storedStartTime = await AsyncStorage.getItem("sessionStartTime");
+      if (storedStartTime) {
+        const startTime = parseInt(storedStartTime, 10);
+        const currentTime = new Date().getTime();
+        const duration = currentTime - startTime;
+        setSessionDuration(duration);
+        await AsyncStorage.setItem("sessionDuration", duration.toString());
+      }
+    };
+
+    calculateSessionDuration();
+  }, []);
+
+  return isLoggedIn ? (
+    <Redirect href="/home" sessionDuration={sessionDuration} />
+  ) : (
+    <Redirect href="/landing" />
+  );
 }

@@ -95,45 +95,13 @@ export default function Login() {
     }
   };
 
-  if (isForgotPassword) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>Forgot Password</Text>
-        <TextInput
-          placeholder="Enter your email"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          value={resetEmail}
-          onChangeText={setResetEmail}
-        />
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={handleForgotPassword}
-        >
-          <Text style={styles.loginText}>Send Reset Email</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.createAccountButton}
-          onPress={() => setIsForgotPassword(false)}
-        >
-          <Text style={styles.createAccountText}>Back to Login</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  if (isLoggedIn) {
-    // If user is already logged in, don't render the login form
-    return null;
-  }
-
   return (
-    <View style={styles.container}>
-      <KeyboardAvoidingView
-        style={styles.keyboardAvoidingView}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
           <View style={styles.content}>
             <Image
               source={require("../assets/images/logo.png")}
@@ -206,10 +174,10 @@ export default function Login() {
               </TouchableOpacity>
             </View>
           </View>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-      <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
-    </View>
+        </KeyboardAvoidingView>
+        <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -326,6 +294,8 @@ const styles = StyleSheet.create({
   footerText: {
     color: "#bbb",
     textAlign: "center",
-    paddingBottom: 10,
+    position: "absolute",
+    bottom: 10,
+    width: "100%",
   },
 });

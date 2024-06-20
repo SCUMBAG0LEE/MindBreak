@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  Dimensions, // Import Dimensions from react-native
+  Dimensions,
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
@@ -16,6 +16,9 @@ import Navbar from "./navbar";
 
 export default function Home() {
   const [email, setEmail] = useState("");
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+  const [startTime, setStartTime] = useState(new Date().getTime());
+  const [upcomingUpdates, setUpcomingUpdates] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,7 +30,49 @@ export default function Home() {
     };
 
     getEmail();
+
+    const loadTotalTimeSpent = async () => {
+      const storedTime = await AsyncStorage.getItem("totalTimeSpent");
+      if (storedTime) {
+        setTotalTimeSpent(parseInt(storedTime, 10));
+      }
+    };
+
+    loadTotalTimeSpent();
+
+    loadUpcomingUpdates(); // Load upcoming updates on component mount
   }, []);
+
+  useEffect(() => {
+    const saveTotalTimeSpent = async () => {
+      await AsyncStorage.setItem("totalTimeSpent", totalTimeSpent.toString());
+    };
+
+    saveTotalTimeSpent();
+  }, [totalTimeSpent]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const currentTime = new Date().getTime();
+      const elapsedTime = currentTime - startTime;
+      setTotalTimeSpent((prevTime) => prevTime + elapsedTime);
+      setStartTime(currentTime);
+    }, 60000); // Update every minute (60000 milliseconds)
+
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  async function loadUpcomingUpdates() {
+    try {
+      // Example: Fetching upcoming updates from AsyncStorage
+      const storedUpdates = await AsyncStorage.getItem("upcomingUpdates");
+      if (storedUpdates) {
+        setUpcomingUpdates(JSON.parse(storedUpdates));
+      }
+    } catch (error) {
+      console.error("Error loading upcoming updates:", error);
+    }
+  }
 
   function handleAvatarPress() {
     if (email === "") {
@@ -40,6 +85,9 @@ export default function Home() {
   function handleGetStartedPress() {
     router.push("/courses");
   }
+
+  const formattedTime = Math.floor(totalTimeSpent / 60000); // Convert to minutes
+  const progressWidth = (formattedTime / 60) * 100; // Calculate percentage
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -61,9 +109,11 @@ export default function Home() {
           </View>
           <View style={styles.timeSpentCard}>
             <Text style={styles.timeSpentText}>Time Spent</Text>
-            <Text style={styles.timeSpentValue}>0 min / 60 min</Text>
+            <Text style={styles.timeSpentValue}>
+              {formattedTime} min / 60 min
+            </Text>
             <View style={styles.progressBar}>
-              <View style={styles.progress} />
+              <View style={[styles.progress, { width: `${progressWidth}%` }]} />
             </View>
             <TouchableOpacity>
               <Text style={styles.myCoursesText}>My courses</Text>
@@ -72,7 +122,7 @@ export default function Home() {
           <View style={styles.getStartedCard}>
             <TouchableOpacity onPress={handleGetStartedPress}>
               <Image
-                source={require("../assets/images/learning.png")} // Replace with actual image
+                source={require("../assets/images/learning.png")}
                 style={styles.getStartedImage}
                 resizeMode="contain"
               />
@@ -83,9 +133,12 @@ export default function Home() {
             <Text style={styles.cardContent}>There is nothing here</Text>
           </View>
           <View style={styles.upcomingQuizCard}>
-            <Text style={styles.cardTitle}>Upcoming Quiz</Text>
-            <Text style={styles.cardContent}>12/12 10:00 AM</Text>
-            <Text style={styles.cardContent}>Math Test | Grade 12</Text>
+            <Text style={styles.cardTitle}>Upcoming Updates</Text>
+            {upcomingUpdates.map((update, index) => (
+              <Text key={index} style={styles.cardContent}>
+                {update.title}: {update.date}
+              </Text>
+            ))}
           </View>
         </View>
       </ScrollView>
@@ -95,7 +148,7 @@ export default function Home() {
   );
 }
 
-const { width } = Dimensions.get("window"); // Get the device's width
+const { width } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -106,14 +159,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#000000",
     paddingHorizontal: 16,
-    paddingBottom: 60, // Ensure there's space for the navbar
-    marginTop: 32, // Increased margin to move the whole container down
+    paddingBottom: 60,
+    marginTop: 32,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 40, // Adjusted margin for the header
+    marginTop: 40,
     marginBottom: 16,
   },
   greeting: {
@@ -155,7 +208,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progress: {
-    width: "0%", // Change this value to represent the progress
     height: "100%",
     backgroundColor: "#f15a29",
   },
@@ -169,9 +221,9 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   getStartedImage: {
-    width: width * 0.9, // Adjust width dynamically based on device width
-    height: width * 0.5, // Maintain aspect ratio relative to width
-    borderRadius: 20, // Keep the rounded edges
+    width: width * 0.9,
+    height: width * 0.5,
+    borderRadius: 20,
   },
   learningPlanCard: {
     backgroundColor: "#14213D",
