@@ -35,7 +35,7 @@ const Navbar = ({ active }) => {
           styles.navItem,
           active === "analytics" ? styles.activeItem : null,
         ]}
-        onPress={() => navigation.navigate("report")}
+        onPress={() => navigation.navigate("report", { score: null })}
       >
         <Image
           source={require("../assets/images/analytics.png")}

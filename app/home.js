@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Dimensions, // Import Dimensions from react-native
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -27,17 +28,6 @@ export default function Home() {
     getEmail();
   }, []);
 
-  // useEffect(() => {
-  //   const getUsername = async () => {
-  //     const storedUsername = await AsyncStorage.getItem("username");
-  //     if (storedUsername) {
-  //       setUsername(storedUsername);
-  //     }
-  //   };
-
-  //   getUsername();
-  // }, []);
-
   function handleAvatarPress() {
     if (email === "") {
       router.push("/login");
@@ -46,12 +36,16 @@ export default function Home() {
     }
   }
 
+  function handleGetStartedPress() {
+    router.push("/courses");
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Welcome, {email}!</Text>
+            <Text style={styles.greeting}>Hello, {email ? email : "Name"}</Text>
             <Text style={styles.subtitle}>Let's start learning</Text>
           </View>
           <TouchableOpacity onPress={handleAvatarPress}>
@@ -71,13 +65,15 @@ export default function Home() {
             <Text style={styles.myCoursesText}>My courses</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.getStartedCard}>
-          <Image
-            source={{ uri: "https://via.placeholder.com/150" }} // Replace with actual image
-            style={styles.getStartedImage}
-          />
-          <Text style={styles.getStartedText}>Get Started</Text>
-        </TouchableOpacity>
+        <View style={styles.getStartedCard}>
+          <TouchableOpacity onPress={handleGetStartedPress}>
+            <Image
+              source={require("../assets/images/learning.png")} // Replace with actual image
+              style={styles.getStartedImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
         <View style={styles.learningPlanCard}>
           <Text style={styles.cardTitle}>Learning Plan</Text>
           <Text style={styles.cardContent}>There is nothing here</Text>
@@ -92,6 +88,8 @@ export default function Home() {
     </SafeAreaView>
   );
 }
+
+const { width } = Dimensions.get("window"); // Get the device's width
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -161,20 +159,13 @@ const styles = StyleSheet.create({
   },
   getStartedCard: {
     backgroundColor: "#2a0951",
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 5,
     alignItems: "center",
-    marginBottom: 16,
   },
   getStartedImage: {
-    width: 150,
-    height: 100,
-    marginBottom: 8,
-  },
-  getStartedText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
+    width: width * 0.9, // Adjust width dynamically based on device width
+    height: width * 0.75, // Maintain aspect ratio relative to width
+    borderRadius: 20, // Keep the rounded edges
   },
   learningPlanCard: {
     backgroundColor: "#3a1a7a",

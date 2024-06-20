@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import Navbar from "./navbar";
 import { useRouter } from "expo-router";
+import { useRoute } from "@react-navigation/native";
 
 export default function Analytics() {
   const [username, setUsername] = useState("");
@@ -24,7 +25,8 @@ export default function Analytics() {
   const [quizSubject, setQuizSubject] = useState("");
   const [quizScores, setQuizScores] = useState([]);
   const router = useRouter();
-
+  const route = useRoute();
+  const { score } = route.params;
   useEffect(() => {
     const getEmail = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
@@ -100,7 +102,7 @@ export default function Analytics() {
   const toggleExpanded = () => {
     setExpanded(!expanded);
   };
-
+  // Check if score is undefined
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -109,6 +111,11 @@ export default function Analytics() {
           <Text style={styles.subHeaderText}>
             Let's see your progress today
           </Text>
+          {score !== null ? (
+            <Text style={styles.subHeaderText}>Score from Quiz: {score}</Text>
+          ) : (
+            <Text style={styles.subHeaderText}>No score available</Text>
+          )}
         </View>
         <Image
           source={require("../assets/images/profile.png")}
