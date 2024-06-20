@@ -13,6 +13,19 @@ export default function Login() {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
 
+  useEffect(() => {
+    const getEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) {
+        // Redirect to "/home" if email is stored
+        router.push("/home");
+      }
+    };
+  
+    getEmail(); // Call getEmail immediately when component mounts
+  }, []);
+  
+
   const handleLogin = async () => {
     try {
       if (email === "" || password === "") {
