@@ -17,16 +17,27 @@ import { useRouter } from "expo-router";
 export default function Courses() {
   const [email, setEmail] = useState("");
   const router = useRouter();
+<<<<<<< Updated upstream
 
+=======
+  const navigation = useNavigation();
+  const [pfpUrl, setPfpUrl] = useState(null);
+>>>>>>> Stashed changes
   useEffect(() => {
-    const getEmail = async () => {
-      const storedEmail = await AsyncStorage.getItem("email");
-      if (storedEmail) {
-        setEmail(storedEmail);
+    const initData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("docsnap");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setEmail(parsedData.email);
+          setPfpUrl(await AsyncStorage.getItem("pfp"))
+        }
+      } catch (error) {
+        console.error('Error initializing data:', error);
       }
     };
 
-    getEmail();
+    initData();
   }, []);
 
   // useEffect(() => {
@@ -58,7 +69,7 @@ export default function Courses() {
             <Text style={styles.username}>{email}</Text>
             <TouchableOpacity onPress={handleAvatarPress}>
               <Image
-                source={require("../assets/images/profile.png")}
+                source={{ uri: pfpUrl }}
                 style={styles.profileImage}
               />
             </TouchableOpacity>

@@ -16,6 +16,8 @@ import {
 import { useRouter } from "expo-router";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { doc, getDoc } from "firebase/firestore";
+import { db, auth } from "./firebase";
 
 export default function Login() {
   const router = useRouter();
@@ -25,19 +27,32 @@ export default function Login() {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Add this state
 
   useEffect(() => {
+<<<<<<< Updated upstream
     // Listen for authentication state changes
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         // User is logged in, navigate to home directly
         setIsLoggedIn(true);
+=======
+    const getEmail = async () => {
+      const loggedInStatus = await AsyncStorage.getItem("docsnap");
+      if (loggedInStatus) {
+>>>>>>> Stashed changes
         router.push("/home");
       } else {
         setIsLoggedIn(false);
       }
+<<<<<<< Updated upstream
     });
 
     return unsubscribe; // Clean up the listener when the component unmounts
   }, [auth, router]);
+=======
+    };
+
+    getEmail();
+  }, []);
+>>>>>>> Stashed changes
 
   const handleLogin = async () => {
     try {
@@ -45,6 +60,7 @@ export default function Login() {
         throw new Error("Email and password cannot be empty");
       }
 
+<<<<<<< Updated upstream
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -57,6 +73,17 @@ export default function Login() {
 
       // Navigate to home screen
       router.push("/home");
+=======
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (userCredential) {
+      const docRef = doc(db, "users", auth.currentUser.uid);
+      const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              await AsyncStorage.setItem("docsnap", JSON.stringify(docSnap.data()));
+            }
+      router.push("/home");
+          }
+>>>>>>> Stashed changes
     } catch (error) {
       let errorMessage = "An error occurred";
 

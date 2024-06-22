@@ -1,9 +1,22 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Navbar = ({ active }) => {
   const navigation = useNavigation();
+  const [userData, setUserData] = useState(null);
+  const [pfpUrl, setPfpUrl] = useState(null);
+
+  useEffect(() => {
+    const initData = async () => {
+    setUserData(JSON.parse(await AsyncStorage.getItem("docsnap")));
+    setPfpUrl(await AsyncStorage.getItem("profileImage"));
+    }
+  
+    initData();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -51,7 +64,7 @@ const Navbar = ({ active }) => {
         onPress={() => navigation.navigate("profile")}
       >
         <Image
-          source={require("../assets/images/profile.png")}
+          source={{ uri: pfpUrl }}
           style={styles.icon}
         />
         <Text style={styles.text}>Profile</Text>

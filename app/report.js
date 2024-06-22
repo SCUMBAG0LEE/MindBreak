@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/FontAwesome5";
 import Navbar from "./navbar";
 import { useRouter } from "expo-router";
+<<<<<<< Updated upstream
 
 export default function Analytics() {
   const [username, setUsername] = useState("");
@@ -21,21 +22,79 @@ export default function Analytics() {
   const [expanded, setExpanded] = useState(false);
   const [interval, setInterval] = useState("Weekly");
   const [quizScores, setQuizScores] = useState([]);
+=======
+import { useRoute } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import { db, auth } from "./firebase";
+
+const colors = {
+  primaryBackground: "#000000",
+  secondaryBackground: "#14213D",
+  activeButtonColor: "#FCA311",
+  chartBackground: "#14213D",
+  chartGradientFrom: "#0c172e",
+  chartGradientTo: "#14213D",
+  positiveColor: "#80ffaa",
+  negativeColor: "#f15a29",
+};
+
+export default function Analytics() {
+  const [email, setEmail] = useState(null);
+  const [expanded, setExpanded] = useState(false);
+  const [interval, setInterval] = useState("Weekly");
+  const [quizScores, setQuizScores] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalTimeSpent, setTotalTimeSpent] = useState(0);
+  const [lastResetDate, setLastResetDate] = useState(null);
+  const [username, setUsername] = useState("");
+  const [pfpUrl, setPfpUrl] = useState(null);
+  const startTimeRef = useRef(new Date().getTime());
+>>>>>>> Stashed changes
   const router = useRouter();
 
+<<<<<<< Updated upstream
   useEffect(() => {
     const getEmail = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
       if (storedEmail) {
         setEmail(storedEmail);
       }
+=======
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("docsnap");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          setEmail(parsedData.email);
+          setPfpUrl(await AsyncStorage.getItem("pfp"))
+        }
+      } catch (error) {
+        console.error('Error initializing data:', error);
+      }
+    };
+
+    initData();
+  }, []);
+
+  // Load data from AsyncStorage on mount
+  useEffect(() => {
+    const initializeData = async () => {
+      const storedTime = await AsyncStorage.getItem("totalTimeSpent");
+      if (storedTime) setTotalTimeSpent(parseInt(storedTime, 10));
+
+      const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
+      if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
+
+      loadScores();
+>>>>>>> Stashed changes
     };
 
     getEmail();
   }, []);
 
   function handleAvatarPress() {
-    if (email === "") {
+    if (!auth.currentUser) {
       router.push("/login");
     } else {
       router.push("/profile");
@@ -95,10 +154,12 @@ export default function Analytics() {
             Let's see your progress today
           </Text>
         </View>
-        <Image
-          source={require("../assets/images/profile.png")}
-          style={styles.avatar}
-        />
+        <TouchableOpacity onPress={handleAvatarPress}>
+          <Image
+            source={{ uri: pfpUrl }}
+            style={styles.avatar}
+          />
+        </TouchableOpacity>
       </View>
       <View style={styles.intervalContainer}>
         {["Weekly", "Monthly", "Yearly"].map((int) => (
@@ -167,7 +228,11 @@ export default function Analytics() {
               style={styles.backButton}
               onPress={toggleExpanded}
             >
+<<<<<<< Updated upstream
               <Icon name="arrow-left" size={24} color="white" />
+=======
+              <Icon name="chevron-left" size={20} color="white" />
+>>>>>>> Stashed changes
             </TouchableOpacity>
             <Text style={styles.sectionTitle}>{email}'s Report</Text>
 

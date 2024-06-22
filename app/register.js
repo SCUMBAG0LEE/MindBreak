@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Alert,
   Dimensions,
-  SafeAreaView,
   Platform,
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
@@ -16,17 +15,87 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+<<<<<<< Updated upstream
+=======
+import { doc, setDoc } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
+import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
+>>>>>>> Stashed changes
 
 export default function Register() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+<<<<<<< Updated upstream
+=======
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [imageUri, setImageUri] = useState(null);
+  const [secureTextEntry, setSecureTextEntry] = useState(true); // State to toggle secure text entry for password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(true); // State to toggle visibility of confirm password
+  const [showUploadImage, setShowUploadImage] = useState(true);
+>>>>>>> Stashed changes
 
   const auth = getAuth();
 
+  // Function to pick an image from the device gallery
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      if (result.assets && result.assets.length > 0) {
+        const pickedImage = result.assets[0];
+        setImageUri(pickedImage.uri);
+        setShowUploadImage(false);
+        console.log("done")
+      } else {
+        console.log("No image selected");
+      }
+    }
+  };
+
+  // Function to get the file format extension from the image URI
+  const getImageFormat = (imageUri) => {
+    const filename = imageUri.substring(imageUri.lastIndexOf('/') + 1);
+    return filename.split('.').pop();
+  };
+
+  // Function to handle profile picture upload
+  const handleProfilePictureUpload = async (user, imageUri) => {
+    try {
+      const tempName = user.uid + "." + getImageFormat(imageUri);
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+  
+      const storageRef = ref(storage, `profile_pictures/${tempName}`);
+      await uploadBytes(storageRef, blob);
+      
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      throw error;
+    }
+  };
+
+  // Function to handle user registration
   const handleRegister = async () => {
-    if (!email || !password) {
+    if (!email || !password || !confirmPassword) {
       Alert.alert("Invalid input", "Please fill all the fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Passwords do not match", "Please enter matching passwords");
+      return;
+    }
+
+    if (!imageUri) {
+      Alert.alert("Image Is Empty", "Please upload an image");
       return;
     }
 
@@ -37,6 +106,23 @@ export default function Register() {
         password
       );
       const user = userCredential.user;
+<<<<<<< Updated upstream
+=======
+
+      // Upload profile picture if imageUri is set
+      let profileImageUrl = null;
+      if (imageUri) {
+        profileImageUrl = await handleProfilePictureUpload(user, imageUri);
+      }
+
+      // Example: Saving additional user data to Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        username: username,
+        email: email,
+        pfp: profileImageUrl,
+      });
+
+>>>>>>> Stashed changes
       Alert.alert("Registration successful", "You can now log in");
       router.push("/login");
     } catch (error) {
@@ -55,6 +141,18 @@ export default function Register() {
       Alert.alert("Error", errorMessage);
     }
   };
+
+  // Function to toggle secure text entry of password fields
+  const toggleSecureEntry = () => {
+    setSecureTextEntry((prev) => !prev);
+  };
+
+  // Function to toggle visibility of confirm password
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword((prev) => !prev);
+  };
+
+  // Function to toggle visibility of Upload Image
 
   return (
     <View style={styles.container}>
@@ -78,6 +176,13 @@ export default function Register() {
             <Text style={styles.subtitle}>Good to have you join us!</Text>
             <View style={styles.inputContainer}>
               <TextInput
+                placeholder="Username"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={username}
+                onChangeText={setUsername}
+              />
+              <TextInput
                 placeholder="Email"
                 style={styles.input}
                 placeholderTextColor="#bbb"
@@ -85,14 +190,46 @@ export default function Register() {
                 value={email}
                 onChangeText={setEmail}
               />
-              <TextInput
-                placeholder="Password"
-                style={styles.input}
-                placeholderTextColor="#bbb"
-                secureTextEntry
-                value={password}
-                onChangeText={setPassword}
-              />
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="Password"
+                  style={styles.input}
+                  placeholderTextColor="#bbb"
+                  secureTextEntry={secureTextEntry}
+                  value={password}
+                  onChangeText={setPassword}
+                />
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={toggleSecureEntry}
+                >
+                  <Ionicons
+                    name={secureTextEntry ? 'eye-outline' : 'eye-off-outline'}
+                    size={24}
+                    color="#f15a29"
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="Confirm Password"
+                  style={styles.input}
+                  placeholderTextColor="#bbb"
+                  secureTextEntry={showConfirmPassword}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+                <TouchableOpacity
+                  style={styles.toggleButton}
+                  onPress={toggleConfirmPasswordVisibility}
+                >
+                  <Ionicons
+                    name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'}
+                    size={24}
+                    color="#f15a29"
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
             <TouchableOpacity
               style={styles.signupButton}
@@ -100,10 +237,19 @@ export default function Register() {
             >
               <Text style={styles.signupText}>Sign up</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+  style={[styles.signupButton, showUploadImage ? {} : styles.disabledButton]} // Apply styles based on tugawa condition
+  onPress={pickImage}
+  disabled={!showUploadImage} // Disable the button if tugawa is false
+>
+  <Text style={[styles.signupText, showUploadImage ? {} : styles.disabledButton]}>Upload Image</Text>
+</TouchableOpacity>
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
+      <Text style={styles.footerText}>
+        © All Right Reserved to de VSAUCE
+      </Text>
     </View>
   );
 }
@@ -138,6 +284,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
   },
+  disabledButton: {
+    backgroundColor: "black", // Adjust background color for disabled state
+    color: "black",
+    opacity: 0.5, // Adjust opacity for disabled state
+  },
   backButtonText: {
     color: "white",
     fontSize: 16,
@@ -168,6 +319,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
+    width: "100%",
+  },
+  passwordContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    position: 'relative',
+  },
+  toggleButton: {
+    position: 'absolute',
+    right: 10,
   },
   signupButton: {
     backgroundColor: "#f15a29",
