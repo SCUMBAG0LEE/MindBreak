@@ -1,9 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth, db } from "./firebase"; // Adjust this import based on your firebase setup
+import { doc, getDoc } from "firebase/firestore";
 
 const Navbar = ({ active }) => {
   const navigation = useNavigation();
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+
+  useEffect(() => {
+    const fetchProfileImage = async () => {
+      try {
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setProfileImageUrl(userData.pfp || null); // Assuming "pfp" is the field name for profile picture URL
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchProfileImage();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -51,7 +75,11 @@ const Navbar = ({ active }) => {
         onPress={() => navigation.navigate("profile")}
       >
         <Image
-          source={require("../assets/images/profile.png")}
+          source={
+            profileImageUrl
+              ? { uri: profileImageUrl }
+              : require("../assets/images/profile.png")
+          }
           style={styles.icon}
         />
         <Text style={styles.text}>Profile</Text>
@@ -76,6 +104,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginBottom: 5,
+    borderRadius: 12,
   },
   text: {
     color: "white",
@@ -83,7 +112,7 @@ const styles = StyleSheet.create({
   },
   activeItem: {
     borderTopColor: "#FCA311",
-    borderTopWidth: 6, // Increased from 5 to 8
+    borderTopWidth: 6, // Increased from 5 to 6
     paddingTop: 5, // Decreased from 10 to 5
   },
 });

@@ -1,5 +1,3 @@
-// Index.js
-
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
@@ -12,7 +10,6 @@ export default function Index() {
   useEffect(() => {
     const checkLoginStatus = async () => {
       const email = await AsyncStorage.getItem("email");
-
       if (email) {
         setIsLoggedIn(true);
       }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -19,17 +19,61 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
+import * as ImagePicker from "expo-image-picker";
 
 export default function Register() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [imageUri, setImageUri] = useState(null);
   const auth = getAuth();
 
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      if (result.assets && result.assets.length > 0) {
+        const pickedImage = result.assets[0];
+        setImageUri(pickedImage.uri);
+      } else {
+        console.log("No image selected");
+      }
+    }
+  };
+
+  const getImageFormat = (imageUri) => {
+    const filename = imageUri.substring(imageUri.lastIndexOf("/") + 1);
+    const format = filename.substring(filename.lastIndexOf(".") + 1);
+    return format;
+  };
+
+  const handleProfilePictureUpload = async (user, imageUri) => {
+    try {
+      const tempName = user.uid + "." + getImageFormat(imageUri);
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+
+      const storageRef = ref(storage, `profile_pictures/${tempName}`);
+      await uploadBytes(storageRef, blob);
+
+      const downloadURL = await getDownloadURL(storageRef);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      throw error;
+    }
+  };
+
   const handleRegister = async () => {
-    if (!email || !password) {
-      Alert.alert("Invalid input", "Please fill all the fields");
+    if (!email || !password || !username || !imageUri) {
+      Alert.alert(
+        "Invalid input",
+        "Please fill all the fields and pick an image"
+      );
       return;
     }
 
@@ -39,7 +83,21 @@ export default function Register() {
         email,
         password
       );
-      const user = userCredential.user; // Capture the user object here
+      const user = userCredential.user;
+
+      try {
+        const imageUrl = await handleProfilePictureUpload(user, imageUri);
+        await setDoc(doc(db, "users", user.uid), {
+          username: username,
+          email: email,
+          pfp: imageUrl,
+        });
+
+        console.log("Firestore document updated successfully.");
+      } catch (error) {
+        console.error("Error updating Firestore document:", error);
+        throw error;
+      }
 
       Alert.alert("Registration successful", "You can now log in");
       router.push("/login");
@@ -82,6 +140,13 @@ export default function Register() {
             <Text style={styles.subtitle}>Good to have you join us!</Text>
             <View style={styles.inputContainer}>
               <TextInput
+                placeholder="Username"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={username}
+                onChangeText={setUsername}
+              />
+              <TextInput
                 placeholder="Email"
                 style={styles.input}
                 placeholderTextColor="#bbb"
@@ -97,6 +162,12 @@ export default function Register() {
                 value={password}
                 onChangeText={setPassword}
               />
+              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                <Text style={styles.uploadText}>Pick an Image</Text>
+              </TouchableOpacity>
+              {imageUri && (
+                <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+              )}
             </View>
             <TouchableOpacity
               style={styles.signupButton}
@@ -172,6 +243,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
+  },
+  uploadButton: {
+    backgroundColor: "#4c3c90",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  uploadText: {
+    color: "white",
+  },
+  imagePreview: {
+    width: 100,
+    height: 100,
+    borderRadius: 10,
+    marginTop: 10,
   },
   signupButton: {
     backgroundColor: "#f15a29",

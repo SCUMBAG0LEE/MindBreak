@@ -11,43 +11,73 @@ import {
   ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { useNavigation } from '@react-navigation/native'; 
+import { useNavigation } from "@react-navigation/native";
 import Navbar from "./navbar";
+import { auth, db } from "./firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Home() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
   const [totalTimeSpent, setTotalTimeSpent] = useState(0);
   const [startTime, setStartTime] = useState(new Date().getTime());
   const [lastResetDate, setLastResetDate] = useState(null);
   const [upcomingUpdates, setUpcomingUpdates] = useState([]);
+  const [congratulateVisible, setCongratulateVisible] = useState(false);
   const router = useRouter();
   const navigation = useNavigation();
 
+  const resetUserState = () => {
+    setUsername("");
+    setEmail("");
+    setProfileImageUrl(null);
+    setTotalTimeSpent(0);
+    setLastResetDate(null);
+    setUpcomingUpdates([]);
+  };
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      if (!auth.currentUser) {
+        // User is not authenticated, navigate to login screen
+        resetUserState();
+        navigation.navigate("Login");
+      } else {
+        // User is authenticated, fetch user data as usual
+        try {
+          const userDocRef = doc(db, "users", auth.currentUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            setEmail(userData.email);
+            setUsername(userData.username || "");
+            setProfileImageUrl(userData.pfp || null);
+            setTotalTimeSpent(userData.totalTimeSpent || 0);
+            setLastResetDate(userData.lastResetDate || new Date());
+            setUpcomingUpdates(userData.upcomingUpdates || []);
+          } else {
+            console.log("No such document!");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+
+    checkAuthentication();
+  }, [auth.currentUser]); // Dependency array includes auth.currentUser to trigger on auth state change
+
+  // Load data from AsyncStorage on mount
   useEffect(() => {
     const initializeData = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
       if (storedEmail) setEmail(storedEmail);
-
-      const storedTime = await AsyncStorage.getItem("totalTimeSpent");
-      if (storedTime) setTotalTimeSpent(parseInt(storedTime, 10));
-
-      const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
-      if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
-
-      loadUpcomingUpdates(); // Load upcoming updates on component mount
     };
 
     initializeData();
   }, []);
-
-  useEffect(() => {
-    const saveData = async () => {
-      await AsyncStorage.setItem("totalTimeSpent", totalTimeSpent.toString());
-      await AsyncStorage.setItem("lastResetDate", new Date().toISOString());
-    };
-
-    saveData();
-  }, [totalTimeSpent]);
 
   useEffect(() => {
     const updateInterval = setInterval(() => {
@@ -60,7 +90,11 @@ export default function Home() {
       const now = new Date();
       if (lastResetDate) {
         const lastReset = new Date(lastResetDate);
-        if (now.getDate() !== lastReset.getDate() || now.getMonth() !== lastReset.getMonth() || now.getFullYear() !== lastReset.getFullYear()) {
+        if (
+          now.getDate() !== lastReset.getDate() ||
+          now.getMonth() !== lastReset.getMonth() ||
+          now.getFullYear() !== lastReset.getFullYear()
+        ) {
           // Reset totalTimeSpent and update lastResetDate
           setTotalTimeSpent(0);
           setLastResetDate(now);
@@ -70,24 +104,29 @@ export default function Home() {
       } else {
         setLastResetDate(now);
       }
+
+      // Check if the current time is past 23:59 to reset
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      if (currentHour === 23 && currentMinute === 59) {
+        setTotalTimeSpent(0);
+        setLastResetDate(now);
+        AsyncStorage.setItem("totalTimeSpent", "0");
+        AsyncStorage.setItem("lastResetDate", now.toISOString());
+      }
+
+      // Check if totalTimeSpent has reached 60 minutes
+      if (totalTimeSpent >= 3600000) {
+        // 60 minutes in milliseconds
+        setCongratulateVisible(true);
+      }
     }, 1000); // Update every second for real-time tracking
 
     return () => clearInterval(updateInterval);
-  }, [startTime, lastResetDate]);
-
-  async function loadUpcomingUpdates() {
-    try {
-      const storedUpdates = await AsyncStorage.getItem("upcomingUpdates");
-      if (storedUpdates) {
-        setUpcomingUpdates(JSON.parse(storedUpdates));
-      }
-    } catch (error) {
-      console.error("Error loading upcoming updates:", error);
-    }
-  }
+  }, [startTime, lastResetDate, totalTimeSpent]);
 
   function handleAvatarPress() {
-    if (email === "") {
+    if (!auth.currentUser) {
       router.push("/login");
     } else {
       router.push("/profile");
@@ -99,7 +138,7 @@ export default function Home() {
   }
 
   const formattedTime = Math.floor(totalTimeSpent / 60000); // Convert to minutes
-  const progressWidth = (formattedTime / 60) * 100; // Calculate percentage
+  const progressWidth = Math.min((formattedTime / 60) * 100, 100); // Calculate percentage, capped at 100%
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -108,26 +147,42 @@ export default function Home() {
           <View style={styles.header}>
             <View>
               <Text style={styles.greeting}>
-                Hello, {email ? email : "Name"}
+                Hello, {username ? username : "Name"}
               </Text>
               <Text style={styles.subtitle}>Let's start learning</Text>
             </View>
             <TouchableOpacity onPress={handleAvatarPress}>
-              <Image
-                source={require("../assets/images/profile.png")}
-                style={styles.profileImage}
-              />
+              <View style={styles.profileContainer}>
+                {profileImageUrl ? (
+                  <Image
+                    source={{ uri: profileImageUrl }}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <Image
+                    source={require("../assets/images/profile.png")}
+                    style={styles.profileImage}
+                  />
+                )}
+                <Text style={styles.usernameText}>Hello, {username}!</Text>
+                <Text style={styles.usernameText}>Hello, {email}!</Text>
+              </View>
             </TouchableOpacity>
           </View>
           <View style={styles.timeSpentCard}>
-            <Text style={styles.timeSpentText}>Time Spent</Text>
+            <Text style={styles.timeSpentText}>Time Spent Today</Text>
             <Text style={styles.timeSpentValue}>
               {formattedTime} min / 60 min
             </Text>
             <View style={styles.progressBar}>
               <View style={[styles.progress, { width: `${progressWidth}%` }]} />
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('courses')}>
+            {congratulateVisible && (
+              <Text style={styles.congratulateText}>
+                Congratulations on reaching 60 minutes!
+              </Text>
+            )}
+            <TouchableOpacity onPress={() => navigation.navigate("courses")}>
               <Text style={styles.myCoursesText}>My courses</Text>
             </TouchableOpacity>
           </View>
@@ -191,10 +246,20 @@ const styles = StyleSheet.create({
     color: "#bbb",
     fontSize: 16,
   },
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
   profileImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
+  },
+  usernameText: {
+    color: "white",
+    fontSize: 16,
+    marginLeft: 10,
   },
   timeSpentCard: {
     backgroundColor: "#14213D",
@@ -236,7 +301,7 @@ const styles = StyleSheet.create({
   getStartedImage: {
     width: width * 0.9,
     height: width * 0.5,
-    borderRadius: 20,
+    borderRadius: 5,
   },
   learningPlanCard: {
     backgroundColor: "#14213D",
@@ -246,12 +311,13 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     color: "white",
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: "bold",
     marginBottom: 8,
   },
   cardContent: {
-    color: "#bbb",
-    fontSize: 14,
+    color: "white",
+    fontSize: 16,
   },
   upcomingQuizCard: {
     backgroundColor: "#14213D",
@@ -259,9 +325,11 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
   },
-  navbar: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
+  congratulateText: {
+    color: "green",
+    textAlign: "center",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginTop: 10,
   },
 });

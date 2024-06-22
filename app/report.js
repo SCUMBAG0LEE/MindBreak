@@ -16,6 +16,8 @@ import Icon from "react-native-vector-icons/FontAwesome5";
 import Navbar from "./navbar";
 import { useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
+import { doc, getDoc } from "firebase/firestore";
+import { db, auth } from "./firebase";
 
 const colors = {
   primaryBackground: "#000000",
@@ -36,9 +38,62 @@ export default function Analytics() {
   const [refreshing, setRefreshing] = useState(false);
   const [totalTimeSpent, setTotalTimeSpent] = useState(0);
   const [lastResetDate, setLastResetDate] = useState(null);
+  const [username, setUsername] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
   const startTimeRef = useRef(new Date().getTime());
   const router = useRouter();
   const route = useRoute();
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      if (!auth.currentUser) {
+        // User is not authenticated, navigate to login screen
+        router.push("/login");
+      } else {
+        // User is authenticated, fetch user data as usual
+        try {
+          const userDocRef = doc(db, "users", auth.currentUser.uid);
+          const userDocSnap = await getDoc(userDocRef);
+
+          if (userDocSnap.exists()) {
+            const userData = userDocSnap.data();
+            setEmail(userData.email);
+            setUsername(userData.username || "");
+            setProfileImageUrl(userData.pfp || null);
+          } else {
+            console.log("No such document!");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
+      }
+    };
+
+    checkAuthentication();
+  }, []);
+
+  // Load user data from Firebase on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setEmail(userData.email);
+          setUsername(userData.username || "");
+          setProfileImageUrl(userData.pfp || null);
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Load data from AsyncStorage on mount
   useEffect(() => {
@@ -113,7 +168,7 @@ export default function Analytics() {
   };
 
   function handleAvatarPress() {
-    if (email === "") {
+    if (!auth.currentUser) {
       router.push("/login");
     } else {
       router.push("/profile");
@@ -174,15 +229,21 @@ export default function Analytics() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerText}>Welcome, {email}!</Text>
+          <Text style={styles.headerText}>Welcome, {username || email}!</Text>
           <Text style={styles.subHeaderText}>
             Let's see your progress today
           </Text>
         </View>
-        <Image
-          source={require("../assets/images/profile.png")}
-          style={styles.avatar}
-        />
+        <TouchableOpacity onPress={handleAvatarPress}>
+          <Image
+            source={
+              profileImageUrl
+                ? { uri: profileImageUrl }
+                : require("../assets/images/profile.png")
+            }
+            style={styles.avatar}
+          />
+        </TouchableOpacity>
       </View>
       {!expanded && (
         <View style={styles.intervalContainer}>
@@ -256,7 +317,10 @@ export default function Analytics() {
           </View>
         ) : (
           <View style={styles.reportContainer}>
-            <TouchableOpacity style={styles.backButton} onPress={toggleExpanded}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={toggleExpanded}
+            >
               <Icon name="chevron-left" size={20} color="white" />
             </TouchableOpacity>
             <Text style={styles.sectionTitle}>Detailed Report</Text>

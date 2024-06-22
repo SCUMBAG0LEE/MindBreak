@@ -10,16 +10,22 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { Menu, Divider, Provider } from "react-native-paper";
 import Navbar from "./navbar";
-import { auth, sendPasswordResetEmail } from "./firebase.js";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { db, storage, auth } from "./firebase";
+import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 
-export default function Profile({ navigation }) {
+export default function Profile() {
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [age, setAge] = useState("");
   const [dob, setDob] = useState("");
   const [school, setSchool] = useState("");
@@ -27,24 +33,102 @@ export default function Profile({ navigation }) {
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [loading, setLoading] = useState(false); // State for loading indicator
+  const navigation = useNavigation();
   const router = useRouter();
 
   useEffect(() => {
-    const getEmail = async () => {
-      const storedEmail = await AsyncStorage.getItem("email");
-      if (storedEmail) {
-        setEmail(storedEmail);
-        setName(storedEmail.split("@")[0].split(".")[0]); // Extract name from email
+    const fetchData = async () => {
+      try {
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setEmail(userData.email);
+          setUsername(userData.username); // Assuming username is stored in Firestore
+          setAge(userData.age || "");
+          setDob(userData.dob || "");
+          setSchool(userData.school || "");
+          setGrade(userData.grade || "");
+          setProfileImageUrl(userData.pfp || null);
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     };
 
-    getEmail();
+    fetchData();
   }, []);
 
+  // Load data from AsyncStorage on mount
+  useEffect(() => {
+    const initializeData = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) setEmail(storedEmail);
+
+      // const storedTime = await AsyncStorage.getItem("totalTimeSpent");
+      // if (storedTime) setTotalTimeSpent(parseInt(storedTime, 10));
+
+      // const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
+      // if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
+
+      // loadScores();
+    };
+
+    initializeData();
+  }, []);
+
+  const updateProfile = async () => {
+    try {
+      setLoading(true);
+
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userDocRef, {
+        age,
+        dob,
+        school,
+        grade,
+      });
+
+      setLoading(false);
+      Alert.alert(
+        "Profile Updated",
+        "Your profile has been updated successfully."
+      );
+    } catch (error) {
+      setLoading(false);
+      console.error("Error updating profile:", error);
+      Alert.alert(
+        "Update Failed",
+        "An error occurred while updating your profile."
+      );
+    }
+  };
+
   const handleLogout = async () => {
-    await auth.signOut();
-    await AsyncStorage.removeItem("email");
-    router.push("/login");
+    try {
+      await auth.signOut();
+      await AsyncStorage.clear(); // Clear all AsyncStorage data
+      setEmail("");
+      setUsername("");
+      setAge("");
+      setDob("");
+      setSchool("");
+      setGrade("");
+      setProfileImageUrl(null);
+      // setImageUri(null);
+      setLoading(false);
+      setIsForgotPassword(false);
+      setResetEmail("");
+      setMenuVisible(false);
+      router.push("/login"); // Ensure proper navigation to login
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -63,7 +147,7 @@ export default function Profile({ navigation }) {
               const user = auth.currentUser;
               await user.delete();
               await AsyncStorage.removeItem("email");
-              router.push("/login");
+              router.push("/login"); // Navigate to login after deletion
             } catch (error) {
               console.error("Error deleting account:", error);
             }
@@ -89,8 +173,62 @@ export default function Profile({ navigation }) {
     }
   };
 
-  const openMenu = () => setMenuVisible(true);
-  const closeMenu = () => setMenuVisible(false);
+  const pickImage = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "We need permissions to access your camera roll."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setImageUri(result.uri);
+        await handleProfilePictureUpload(result.uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert(
+        "Image picking failed",
+        "An error occurred while picking an image."
+      );
+    }
+  };
+
+  const handleProfilePictureUpload = async (uri) => {
+    try {
+      setLoading(true);
+      const response = await fetch(uri);
+      if (!response.ok) throw new Error("Failed to fetch image URI");
+      const blob = await response.blob();
+
+      const storageRef = ref(
+        storage,
+        `profile_pictures/${auth.currentUser.uid}`
+      );
+      await uploadBytes(storageRef, blob);
+
+      const downloadURL = await getDownloadURL(storageRef);
+      setProfileImageUrl(downloadURL);
+      setLoading(false);
+      Alert.alert("Image uploaded", "Profile picture updated successfully.");
+    } catch (error) {
+      setLoading(false);
+      console.error("Error uploading profile picture:", error);
+      Alert.alert(
+        "Upload failed",
+        "An error occurred while uploading the profile picture. Please try again."
+      );
+    }
+  };
 
   return (
     <Provider>
@@ -99,9 +237,9 @@ export default function Profile({ navigation }) {
           <View style={styles.menuContainer}>
             <Menu
               visible={menuVisible}
-              onDismiss={closeMenu}
+              onDismiss={() => setMenuVisible(false)}
               anchor={
-                <TouchableOpacity onPress={openMenu}>
+                <TouchableOpacity onPress={() => setMenuVisible(true)}>
                   <Image
                     source={require("../assets/images/menu-icon.png")}
                     style={styles.menuIcon}
@@ -122,10 +260,26 @@ export default function Profile({ navigation }) {
           </View>
 
           <View style={styles.profileContainer}>
-            <Image
-              source={require("../assets/images/profile.png")}
-              style={styles.avatar}
-            />
+            {loading ? (
+              <ActivityIndicator size="large" color="#f15a29" />
+            ) : (
+              <Image
+                source={
+                  profileImageUrl
+                    ? { uri: profileImageUrl }
+                    : require("../assets/images/profile.png")
+                }
+                style={styles.avatar}
+              />
+            )}
+            <TouchableOpacity
+              style={styles.imagePickerButton}
+              onPress={pickImage}
+              disabled={loading}
+            >
+              <Text style={styles.imagePickerText}>Change Profile Picture</Text>
+            </TouchableOpacity>
+            <Text style={styles.email}>{username}</Text>
             <Text style={styles.email}>{email}</Text>
           </View>
 
@@ -157,13 +311,25 @@ export default function Profile({ navigation }) {
               <Text style={styles.sectionTitle}>Profile Details</Text>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Name</Text>
+                <Text style={styles.label}>Username</Text>
                 <TextInput
                   style={styles.detailItem}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Name"
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Username"
                   placeholderTextColor="#bbb"
+                  editable={true}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.detailItem}
+                  value={email}
+                  placeholder="Email"
+                  placeholderTextColor="#bbb"
+                  editable={false}
                 />
               </View>
 
@@ -191,17 +357,6 @@ export default function Profile({ navigation }) {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                  style={styles.detailItem}
-                  value={email}
-                  placeholder="Email"
-                  placeholderTextColor="#bbb"
-                  editable={false}
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
                 <Text style={styles.label}>School</Text>
                 <TextInput
                   style={styles.detailItem}
@@ -222,6 +377,14 @@ export default function Profile({ navigation }) {
                   placeholderTextColor="#bbb"
                 />
               </View>
+
+              <TouchableOpacity
+                style={styles.updateButton}
+                onPress={updateProfile}
+                disabled={loading}
+              >
+                <Text style={styles.updateButtonText}>Update Profile</Text>
+              </TouchableOpacity>
             </View>
           )}
         </ScrollView>
@@ -328,6 +491,25 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   backText: {
+    color: "white",
+  },
+  imagePickerButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  imagePickerText: {
+    color: "white",
+  },
+  updateButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  updateButtonText: {
     color: "white",
   },
   navbar: {
