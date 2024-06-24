@@ -8,6 +8,17 @@
       "expo-router"
     ],
     "name": "mind-break",
-    "slug": "mind-break"
+    "slug": "mind-break",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "711bef78-42cc-43b0-b6ed-d049dc4198be"
+      }
+    },
+    "android": {
+      "package": "com.devsauce.mindbreak"
+    }
   }
 }

@@ -2,221 +2,125 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Image,
   Dimensions,
   SafeAreaView,
   ScrollView,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router"; // Import useRouter from Expo's router
+import { Menu, Divider, Provider } from "react-native-paper";
 import Navbar from "./navbar";
-<<<<<<< Updated upstream
-import { auth } from "./firebase.js"; // Import the auth instance
+import { sendPasswordResetEmail } from "firebase/auth";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db, storage, auth } from "./firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { useRouter } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 
-export default function Profile({ navigation }) {
+export default function Profile() {
   const [email, setEmail] = useState("");
-=======
-import * as ImagePicker from 'expo-image-picker';
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { db, storage, auth, sendPasswordResetEmail } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
-import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
-import * as FileSystem from 'expo-file-system';
-
-export default function Profile({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [age, setAge] = useState("");
   const [dob, setDob] = useState("");
   const [school, setSchool] = useState("");
   const [grade, setGrade] = useState("");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
-  const [profileImageUrl, setProfileImageUrl] = useState(null); // State to store profile image URL
   const [resetEmail, setResetEmail] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
->>>>>>> Stashed changes
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const navigation = useNavigation();
   const router = useRouter();
-  const [imageUri, setImageUri] = useState(null);
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    const getEmail = async () => {
-      const storedEmail = await AsyncStorage.getItem("email");
-      if (storedEmail) {
-        setEmail(storedEmail);
-=======
-    const initializeData = async () => {
+    const fetchData = async () => {
       try {
-        // Function to fetch and set email from AsyncStorage
-        const getEmail = async () => {
-          try {
-            const storedEmail = await AsyncStorage.getItem("email");
-            if (storedEmail) {
-              setEmail(storedEmail);
-            }
-          } catch (error) {
-            console.error('Error fetching email from AsyncStorage:', error);
-          }
-        };
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-        // Execute getEmail and checkLocalImage in sequence
-        await getEmail();
-        const cachedPfp = await AsyncStorage.getItem("pfp")
-        if(cachedPfp) {
-          setProfileImageUrl(cachedPfp);
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setEmail(userData.email);
+          setUsername(userData.username);
+          setAge(userData.age || "");
+          setDob(userData.dob || "");
+          setSchool(userData.school || "");
+          setGrade(userData.grade || "");
+          setProfileImageUrl(userData.pfp || null);
+        } else {
+          console.log("No such document!");
         }
-
       } catch (error) {
-        console.error('Error initializing data:', error);
->>>>>>> Stashed changes
+        console.error("Error fetching user data:", error);
       }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const initializeData = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) setEmail(storedEmail);
     };
 
     initializeData();
   }, []);
 
-  async function deleteFilesWithPrefix(prefix) {
-    const storageRef = ref(storage, 'profile_picture');
-  
-    // List all items in the 'profile_picture' folder
-    const listResult = await listAll(storageRef);
-  
-    // Iterate through each item and delete if its name starts with 'shit.'
-    const deletePromises = listResult.items.map(item => {
-      if (item.name.startsWith(prefix)) {
-        return item.delete();
-      }
-      return Promise.resolve();
-    });
-  
-    // Wait for all deletions to complete
-    await Promise.all(deletePromises);
-  
-    console.log('All files with prefix "'+ prefix +'" deleted successfully.');
-  }  
-
-  const updatePfp = async () => {
+  const updateProfile = async () => {
     try {
-      if (!imageUri) {
-        Alert.alert("No image selected", "Please pick an image.");
-        return;
-      }
+      setLoading(true);
 
-      const imageUrl = await handleProfilePictureUpload(auth.currentUser, imageUri);
-      const existingImageName = auth.currentUser ? `profile_pictures/${auth.currentUser.uid}` : ''; // Adjust path and name as per your setup
-
-      if (!existingImageName) {
-        Alert.alert("User not authenticated", "User information not available.");
-        return;
-      }
-
-      // Update Firestore with the new image URL
-      await setDoc(doc(db, "users", auth.currentUser.uid), {
-        pfp: imageUrl,
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      await updateDoc(userDocRef, {
+        age,
+        dob,
+        school,
+        grade,
       });
 
-      deleteLocalImage(profileImageUrl);
-      downloadImage(imageUrl);
-      setImageUri(null);
+      setLoading(false);
+      Alert.alert(
+        "Profile Updated",
+        "Your profile has been updated successfully."
+      );
     } catch (error) {
-      console.error("Error updating profile picture:", error);
-      Alert.alert("Upload failed", "An error occurred while updating the profile picture.");
-    }
-  };
-
-  const downloadImage = async (imageUrl) => {
-    try {
-      const response = await fetch(imageUrl);
-      const contentType = response.headers.get('content-type');
-
-      if (contentType) {
-        const fileExtension = contentType.split('/').pop(); // Extract file extension from content-type
-        const fileUri = FileSystem.documentDirectory + `pfp.${fileExtension}`;
-        await AsyncStorage.setItem("pfp", fileUri);
-        setProfileImageUrl(fileUri);
-
-        const fileBlob = await response.blob();
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const base64Data = reader.result;
-
-          await FileSystem.writeAsStringAsync(fileUri, base64Data.split(',')[1], {
-            encoding: FileSystem.EncodingType.Base64,
-          });
-
-          console.log('Image downloaded to:', fileUri);
-        };
-        reader.readAsDataURL(fileBlob);
-      } else {
-        console.error('Failed to determine content-type');
-      }
-    } catch (error) {
-      console.error('Error downloading image:', error);
-    }
-  };
-
-  const deleteLocalImage = async (imageUri) => {
-    try {
-      if (imageUri) {
-        await FileSystem.deleteAsync(imageUri);
-        console.log('Deleted local image:', imageUri);
-        setImageUri(null); // Clear imageUri state after deletion
-      } else {
-        console.log('No local image to delete');
-      }
-    } catch (error) {
-      console.error('Error deleting local image:', error);
-    }
-  };
-
-  const getImageFormat = (imageUri) => {
-    if (!imageUri) return ''; // Handle case where imageUri is not provided
-
-    // Get the last segment after the last '/'
-    const filename = imageUri.substring(imageUri.lastIndexOf('/') + 1);
-  
-    // Get the file extension after the last '.'
-    const format = filename.substring(filename.lastIndexOf('.') + 1);
-  
-    return format;
-  };
-
-  const pick = async () => {
-    try {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 1,
-      });
-
-      if (!result.cancelled) {
-        // If result.assets is an array (typically with a single item for a single image pick)
-        if (result.assets && result.assets.length > 0) {
-          const pickedImage = result.assets[0];
-          setImageUri(pickedImage.uri);
-          updatePfp();
-        } else {
-          console.log("No image selected");
-        }
-      }
-    } catch (error) {
-      console.error("Error picking image:", error);
-      Alert.alert("Image picking failed", "An error occurred while picking an image.");
+      setLoading(false);
+      console.error("Error updating profile:", error);
+      Alert.alert(
+        "Update Failed",
+        "An error occurred while updating your profile."
+      );
     }
   };
 
   const handleLogout = async () => {
-<<<<<<< Updated upstream
-    await auth.signOut(); // Sign out the user
-    await AsyncStorage.removeItem("email"); // Remove the email from storage
-    router.push("/login"); // Navigate to login screen
-=======
-    await auth.signOut();
-    await AsyncStorage.removeItem("email");
-    await AsyncStorage.removeItem("docsnap")
-    deleteLocalImage(profileImageUrl);
-    router.push("/login");
->>>>>>> Stashed changes
+    try {
+      await auth.signOut();
+      await AsyncStorage.clear();
+      setEmail("");
+      setUsername("");
+      setAge("");
+      setDob("");
+      setSchool("");
+      setGrade("");
+      setProfileImageUrl(null);
+      setLoading(false);
+      setIsForgotPassword(false);
+      setResetEmail("");
+      setMenuVisible(false);
+      router.push("/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
   };
 
   const handleDeleteAccount = async () => {
@@ -233,9 +137,9 @@ export default function Profile({ navigation }) {
           onPress: async () => {
             try {
               const user = auth.currentUser;
-              await user.delete(); // Delete the user's account instance
-              await AsyncStorage.removeItem("email"); // Remove the email from storage
-              router.push("/login"); // Navigate to login screen
+              await user.delete();
+              await AsyncStorage.removeItem("email");
+              router.push("/login");
             } catch (error) {
               console.error("Error deleting account:", error);
             }
@@ -244,31 +148,6 @@ export default function Profile({ navigation }) {
       ]
     );
   };
-
-<<<<<<< Updated upstream
-  // const handleBack = () => {
-  //   router.goBack();
-  // };
-=======
-    // Function to handle profile picture upload
-    const handleProfilePictureUpload = async (user, imageUri) => {
-      try {
-        // await deleteFilesWithPrefix(user.uid + ".")
-  
-        const tempName = user.uid + "." + getImageFormat(imageUri);
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
-    
-        const storageRef = ref(storage, `profile_pictures/${tempName}`);
-        await uploadBytes(storageRef, blob);
-        
-        const downloadURL = await getDownloadURL(storageRef);
-        return downloadURL;
-      } catch (error) {
-        console.error("Error uploading profile picture:", error);
-        throw error;
-      }
-    };
 
   const handleForgotPassword = async () => {
     try {
@@ -286,97 +165,268 @@ export default function Profile({ navigation }) {
     }
   };
 
-  const openMenu = () => setMenuVisible(true);
-  const closeMenu = () => setMenuVisible(false);
->>>>>>> Stashed changes
+  const pickImage = async () => {
+    try {
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "We need permissions to access your camera roll."
+        );
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 1,
+      });
+
+      if (!result.canceled) {
+        setProfileImageUrl(result.uri);
+        await handleProfilePictureUpload(result.uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert(
+        "Image picking failed",
+        "An error occurred while picking an image."
+      );
+    }
+  };
+
+  const handleProfilePictureUpload = async (uri) => {
+    try {
+      setLoading(true);
+      const response = await fetch(uri);
+      if (!response.ok) throw new Error("Failed to fetch image URI");
+      const blob = await response.blob();
+
+      const storageRef = ref(
+        storage,
+        `profile_pictures/${auth.currentUser.uid}`
+      );
+      await uploadBytes(storageRef, blob);
+
+      const downloadURL = await getDownloadURL(storageRef);
+      setProfileImageUrl(downloadURL);
+      setLoading(false);
+      Alert.alert("Image uploaded", "Profile picture updated successfully.");
+    } catch (error) {
+      setLoading(false);
+      console.error("Error uploading profile picture:", error);
+      Alert.alert(
+        "Upload failed",
+        "An error occurred while uploading the profile picture. Please try again."
+      );
+    }
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDob(selectedDate.toLocaleDateString());
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-          <Text style={styles.backButtonText}>{"< Back"}</Text>
-        </TouchableOpacity> */}
-        <View style={styles.profileContainer}>
-          <Image
-            source={require("../assets/images/profile.png")}
-            style={styles.avatar}
-          />
-          {/* <Text style={styles.title}>{username}</Text> */}
-          <Text style={styles.email}>{email}</Text>
-        </View>
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>10</Text>
-            <Text style={styles.statLabel}>Courses</Text>
+    <Provider>
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.menuContainer}>
+            <Menu
+              visible={menuVisible}
+              onDismiss={() => setMenuVisible(false)}
+              anchor={
+                <TouchableOpacity onPress={() => setMenuVisible(true)}>
+                  <Image
+                    source={require("../assets/images/menu-icon.png")}
+                    style={styles.menuIcon}
+                  />
+                </TouchableOpacity>
+              }
+              style={styles.menu}
+            >
+              <Menu.Item onPress={handleLogout} title="Log out" />
+              <Divider />
+              <Menu.Item onPress={handleDeleteAccount} title="Delete Account" />
+              <Divider />
+              <Menu.Item
+                onPress={() => setIsForgotPassword(true)}
+                title="Reset Password"
+              />
+            </Menu>
           </View>
-<<<<<<< Updated upstream
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>Quizzes</Text>
-=======
 
           <View style={styles.profileContainer}>
-          {profileImageUrl ? (
-          <Image
-            source={{ uri: profileImageUrl }}
-            style={styles.avatar}
-          />
-        ) : (
-          <Image
-            source={require("../assets/images/profile.png")} // Placeholder image if profileImageUrl is not available
-            style={styles.avatar}
-          />
-        )}
-            <Text style={styles.email}>{email}</Text>
+            {loading ? (
+              <ActivityIndicator size="large" color="#f15a29" />
+            ) : (
+              <Image
+                source={
+                  profileImageUrl
+                    ? { uri: profileImageUrl }
+                    : require("../assets/images/profile.png")
+                }
+                style={styles.avatar}
+              />
+            )}
             <TouchableOpacity
-        style={styles.backButton}
-        onPress={pick}>
-        <Text style={styles.backButtonText}>Change Image</Text>
-      </TouchableOpacity>
->>>>>>> Stashed changes
+              style={styles.imagePickerButton}
+              onPress={pickImage}
+              disabled={loading}
+            >
+              <Text style={styles.imagePickerText}>Change Profile Picture</Text>
+            </TouchableOpacity>
+            <Text style={styles.email}>{username}</Text>
+            <Text style={styles.email}>{email}</Text>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statNumber}>15</Text>
-            <Text style={styles.statLabel}>Hours Spent</Text>
-          </View>
-        </View>
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>Log out</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDeleteAccount}
-          >
-            <Text style={styles.deleteText}>Delete Account</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-      <Navbar active="profile" />
-    </SafeAreaView>
+
+          {isForgotPassword ? (
+            <View style={styles.forgotPasswordContainer}>
+              <Text style={styles.sectionTitle}>Forgot Password</Text>
+              <TextInput
+                placeholder="Enter your email"
+                style={styles.detailItem}
+                placeholderTextColor="#bbb"
+                value={resetEmail}
+                onChangeText={setResetEmail}
+              />
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={handleForgotPassword}
+              >
+                <Text style={styles.resetText}>Send Reset Email</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setIsForgotPassword(false)}
+              >
+                <Text style={styles.backText}>Back to Profile</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.profileDetails}>
+              <Text style={styles.sectionTitle}>Profile Details</Text>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Username</Text>
+                <TextInput
+                  style={styles.detailItem}
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="Username"
+                  placeholderTextColor="#bbb"
+                  editable={true}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput
+                  style={styles.detailItem}
+                  value={email}
+                  placeholder="Email"
+                  placeholderTextColor="#bbb"
+                  editable={false}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Age</Text>
+                <TextInput
+                  style={styles.detailItem}
+                  value={age}
+                  onChangeText={setAge}
+                  placeholder="Age"
+                  placeholderTextColor="#bbb"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Date of Birth</Text>
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.datePickerText}>
+                    {dob || "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={dob ? new Date(dob) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChange}
+                  />
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>School</Text>
+                <TextInput
+                  style={styles.detailItem}
+                  value={school}
+                  onChangeText={setSchool}
+                  placeholder="School"
+                  placeholderTextColor="#bbb"
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Grade</Text>
+                <TextInput
+                  style={styles.detailItem}
+                  value={grade}
+                  onChangeText={setGrade}
+                  placeholder="Grade"
+                  placeholderTextColor="#bbb"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.updateButton}
+                onPress={updateProfile}
+                disabled={loading}
+              >
+                <Text style={styles.updateButtonText}>Update Profile</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+        <Navbar active="profile" />
+      </SafeAreaView>
+    </Provider>
   );
 }
 
-const { width } = Dimensions.get("window");
-
 const styles = StyleSheet.create({
-  backButton: {
-    alignSelf: "flex-start",
-    padding: 10,
-  },
-  backButtonText: {
-    color: "white",
-    fontSize: 16,
-  },
   safeArea: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "black",
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    paddingTop: 60,
+  },
+  menuContainer: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    zIndex: 1,
+  },
+  menuIcon: {
+    width: 30,
+    height: 30,
+    tintColor: "white",
+  },
+  menu: {
+    marginTop: 20,
   },
   profileContainer: {
     alignItems: "center",
@@ -388,64 +438,101 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 10,
   },
-  title: {
-    color: "white",
-    fontSize: 24,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
   email: {
     color: "white",
     fontSize: 16,
     marginTop: 5,
     textAlign: "center",
   },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  profileDetails: {
     width: "100%",
-    marginTop: 20,
+    backgroundColor: "#1C1646",
+    borderRadius: 10,
+    padding: 20,
     marginBottom: 20,
   },
-  statBox: {
-    alignItems: "center",
-    flex: 1,
-    marginHorizontal: 10,
-  },
-  statNumber: {
+  sectionTitle: {
     color: "white",
     fontSize: 20,
     fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
   },
-  statLabel: {
+  inputContainer: {
+    marginBottom: 15,
+  },
+  label: {
     color: "white",
     fontSize: 16,
+    marginBottom: 5,
   },
-  buttonsContainer: {
-    alignItems: "center",
+  detailItem: {
+    color: "white",
+    fontSize: 16,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 5,
+    backgroundColor: "#2a2465",
+  },
+  datePickerButton: {
+    color: "white",
+    fontSize: 16,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 5,
+    backgroundColor: "#2a2465",
+    textAlign: "center",
+  },
+  datePickerText: {
+    color: "white",
+    textAlign: "center",
+  },
+  forgotPasswordContainer: {
     width: "100%",
+    backgroundColor: "#1C1646",
+    borderRadius: 10,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: "center",
+  },
+  resetButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
     marginTop: 20,
   },
-  logoutButton: {
-    backgroundColor: "#f15a29",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  deleteButton: {
-    backgroundColor: "#f15a29",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 10,
-  },
-  logoutText: {
+  resetText: {
     color: "white",
-    fontSize: 16,
   },
-  deleteText: {
+  backButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  backText: {
     color: "white",
-    fontSize: 16,
+  },
+  imagePickerButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  imagePickerText: {
+    color: "white",
+  },
+  updateButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  updateButtonText: {
+    color: "white",
   },
   navbar: {
     position: "absolute",

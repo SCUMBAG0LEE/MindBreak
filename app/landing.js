@@ -1,21 +1,57 @@
-import React from "react";
-import { StatusBar } from "expo-status-bar";
+import React, { useState, useEffect } from "react";
+import { Audio } from "expo-av";
 import {
-  ScrollView,
-  View,
-  StyleSheet,
+  StatusBar,
   Image,
   Text,
   TouchableOpacity,
-  Dimensions,
+  StyleSheet,
+  ScrollView,
+  View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-const { width, height } = Dimensions.get("window");
-
 const Landing = () => {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load the sound
+  const soundObject = new Audio.Sound();
+  useEffect(() => {
+    const loadSoundAndStart = async () => {
+      try {
+        await soundObject.loadAsync(
+          require("../assets/sounds/Windows 11 Startup Sound  OOBE Intro Video.mp3")
+        );
+        await soundObject.playAsync();
+        // Set a timeout for 3 seconds, then stop the sound and set isLoading to false
+        setTimeout(async () => {
+          await soundObject.stopAsync();
+          setIsLoading(false);
+        }, 5000); // 3000 milliseconds = 3 seconds
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    loadSoundAndStart();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Image
+          source={require("../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -65,74 +101,84 @@ const Landing = () => {
   );
 };
 
-export default Landing;
-
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: 20,
+    marginTop: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: "#161622",
+    padding: 16,
   },
   scrollViewContent: {
     flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: width * 0.04,
   },
   contentContainer: {
     width: "100%",
     alignItems: "center",
   },
   logo: {
-    width: width * 0.6,
-    height: height * 0.2,
-    marginTop: height * -0.1,
+    width: "70%", // Use percentage for responsive sizing
+    height: undefined, // Aspect ratio maintained automatically
+    aspectRatio: 1, // Adjust aspect ratio as per your logo's dimensions
+    marginTop: -100,
+    marginBottom: 20,
   },
   cardsImage: {
-    width: "100%",
-    maxWidth: width * 0.7,
-    height: height * 0.3,
+    width: "90%", // Use percentage for responsive sizing
+    height: undefined,
+    aspectRatio: 1.2, // Adjust aspect ratio as per your image's dimensions
+    marginBottom: 20,
   },
   textContainer: {
-    position: "relative",
-    marginTop: height * 0.02,
     alignItems: "center",
+    marginBottom: 20,
   },
   title: {
-    fontSize: width * 0.06,
+    fontSize: 24,
     color: "white",
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: height * 0.01,
+    marginBottom: 10,
   },
   mindBreakText: {
     color: "#1c1c84",
   },
   pathImage: {
-    width: width * 0.4,
-    height: height * 0.02,
-    position: "absolute",
-    bottom: -height * 0.003,
-    right: width * 0.15,
+    width: "50%", // Use percentage for responsive sizing
+    height: 15,
+    marginBottom: 10,
   },
   description: {
-    fontSize: width * 0.035,
+    fontSize: 14,
     color: "gray",
     textAlign: "center",
-    marginTop: height * 0.02,
+    marginBottom: 20,
   },
   buttonContainer: {
     width: "100%",
-    marginTop: height * 0.02,
-    padding: width * 0.04,
-    height: height * 0.08,
+    paddingVertical: 16,
+    height: 60,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#1c1c84",
-    borderRadius: width * 0.02,
+    borderRadius: 8,
   },
   buttonText: {
     color: "white",
-    fontSize: width * 0.04,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });
+
+export default Landing;

@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
+import { BackHandler } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
-<<<<<<< Updated upstream
     const checkLoginStatus = async () => {
-      const username = await AsyncStorage.getItem("username");
-      const password = await AsyncStorage.getItem("password");
-
-      if (username && password) {
+      const email = await AsyncStorage.getItem("email");
+      if (email) {
         setIsLoggedIn(true);
       }
     };
@@ -19,8 +21,7 @@ export default function Index() {
     checkLoginStatus();
   }, []);
 
-  return isLoggedIn ? <Redirect href="/home" /> : <Redirect href="/landing" />;
-=======
+  useEffect(() => {
     const startSession = async () => {
       const startTime = new Date().getTime();
       setSessionStartTime(startTime);
@@ -45,10 +46,26 @@ export default function Index() {
     calculateSessionDuration();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (!isLoggedIn) {
+          router.push("/landing");
+          return true;
+        }
+        return false;
+      };
+
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [isLoggedIn])
+  );
+
   return isLoggedIn ? (
     <Redirect href="/home" sessionDuration={sessionDuration} />
   ) : (
     <Redirect href="/landing" />
   );
->>>>>>> Stashed changes
 }

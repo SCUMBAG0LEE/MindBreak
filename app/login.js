@@ -4,55 +4,62 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  Image,
+  Dimensions,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   TouchableWithoutFeedback,
   Keyboard,
-  Dimensions,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
+import { auth } from "./firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { doc, getDoc } from "firebase/firestore";
-import { db, auth } from "./firebase";
 
 export default function Login() {
   const router = useRouter();
-  const auth = getAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Add this state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [keyboardOpen, setKeyboardOpen] = useState(false); // State to track keyboard visibility
 
   useEffect(() => {
-<<<<<<< Updated upstream
-    // Listen for authentication state changes
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        // User is logged in, navigate to home directly
-        setIsLoggedIn(true);
-=======
-    const getEmail = async () => {
-      const loggedInStatus = await AsyncStorage.getItem("docsnap");
-      if (loggedInStatus) {
->>>>>>> Stashed changes
-        router.push("/home");
-      } else {
-        setIsLoggedIn(false);
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => {
+        setKeyboardOpen(true);
       }
-<<<<<<< Updated upstream
-    });
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardOpen(false);
+      }
+    );
 
-    return unsubscribe; // Clean up the listener when the component unmounts
-  }, [auth, router]);
-=======
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    const getEmail = async () => {
+      const storedEmail = await AsyncStorage.getItem("email");
+      if (storedEmail) {
+        router.push("/home");
+      }
     };
 
     getEmail();
   }, []);
->>>>>>> Stashed changes
 
   const handleLogin = async () => {
     try {
@@ -60,7 +67,6 @@ export default function Login() {
         throw new Error("Email and password cannot be empty");
       }
 
-<<<<<<< Updated upstream
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -68,22 +74,8 @@ export default function Login() {
       );
       const user = userCredential.user;
 
-      // Save email to AsyncStorage
       await AsyncStorage.setItem("email", user.email);
-
-      // Navigate to home screen
       router.push("/home");
-=======
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      if (userCredential) {
-      const docRef = doc(db, "users", auth.currentUser.uid);
-      const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-              await AsyncStorage.setItem("docsnap", JSON.stringify(docSnap.data()));
-            }
-      router.push("/home");
-          }
->>>>>>> Stashed changes
     } catch (error) {
       let errorMessage = "An error occurred";
 
@@ -100,8 +92,67 @@ export default function Login() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      Alert.alert(
+        "Password Reset Email Sent",
+        "Check your email to reset your password."
+      );
+    } catch (error) {
+      console.error("Error sending password reset email:", error);
+      Alert.alert(
+        "Error",
+        "Failed to send password reset email. Please try again later."
+      );
+    }
+  };
+
+  if (isForgotPassword) {
+    return (
+      <View style={styles.container}>
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.content}>
+              <Text style={styles.title}>Forgot Password</Text>
+              <TextInput
+                placeholder="Enter your email"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={resetEmail}
+                onChangeText={setResetEmail}
+              />
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={handleForgotPassword}
+              >
+                <Text style={styles.resetText}>Send Reset Email</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setIsForgotPassword(false)}
+              >
+                <Text style={styles.backButtonText}>Back to Login</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+        {/* Copyright Text */}
+        {!keyboardOpen && (
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              © All Right Reserved to de VSAUCE
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  }
+
   if (isLoggedIn) {
-    // If user is already logged in, don't render the login form
     return null;
   }
 
@@ -113,23 +164,23 @@ export default function Login() {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.content}>
-            <Image
-              source={require("../assets/images/logo.png")}
-              style={styles.logo}
-            />
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.push("/landing")}
             >
               <Text style={styles.backButtonText}>{"< Back"}</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Log in</Text>
-            <Text style={styles.subtitle}>Welcome back!</Text>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={styles.logo}
+            />
+            <Text style={styles.title}>Login</Text>
             <View style={styles.inputContainer}>
               <TextInput
                 placeholder="Email"
                 style={styles.input}
                 placeholderTextColor="#bbb"
+                keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
               />
@@ -142,46 +193,31 @@ export default function Login() {
                 onChangeText={setPassword}
               />
             </View>
-            <Text style={styles.forgotPassword}>Forgot Password?</Text>
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={styles.createAccountButton}
-                onPress={() => router.push("/register")}
-              >
-                <Text style={styles.createAccountText}>Create account</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.loginButton}
-                onPress={handleLogin}
-              >
-                <Text style={styles.loginText}>Log in</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.orContinueWith}>Or continue with</Text>
-            <View style={styles.socialButtonsContainer}>
-              <TouchableOpacity style={styles.socialButton}>
-                <Image
-                  source={require("../assets/images/google.png")}
-                  style={styles.socialIcon}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <Image
-                  source={require("../assets/images/x.png")}
-                  style={styles.socialIcon}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.socialButton}>
-                <Image
-                  source={require("../assets/images/facebook.png")}
-                  style={styles.socialIcon}
-                />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => setIsForgotPassword(true)}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginText}>Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/register")}>
+              <Text style={styles.registerText}>
+                Don't have an account? Register
+              </Text>
+            </TouchableOpacity>
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
+      {/* Copyright Text */}
+      {!keyboardOpen && (
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            © All Right Reserved to de VSAUCE
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -191,18 +227,27 @@ const { width, height } = Dimensions.get("window");
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#2d046e",
+    backgroundColor: "black",
+    alignItems: "center",
+    justifyContent: "center",
     width: width,
     height: height,
   },
   keyboardAvoidingView: {
     flex: 1,
+    width: "100%",
+  },
+  content: {
+    alignItems: "center",
+    padding: 20,
+    flex: 1,
+    justifyContent: "center",
   },
   backButton: {
     alignSelf: "flex-start",
     padding: 10,
     marginLeft: 10,
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#f15a29",
     borderRadius: 5,
     position: "absolute",
     top: 60,
@@ -211,12 +256,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
-  },
-  content: {
-    alignItems: "center",
-    padding: 20,
-    justifyContent: "center",
-    flex: 1,
   },
   logo: {
     width: 80,
@@ -227,10 +266,6 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 24,
     fontWeight: "bold",
-  },
-  subtitle: {
-    color: "#bbb",
-    fontSize: 16,
     marginBottom: 20,
   },
   inputContainer: {
@@ -244,61 +279,50 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 10,
   },
+  resetButton: {
+    backgroundColor: "#f15a29",
+    padding: 15,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  resetText: {
+    color: "white",
+  },
   forgotPassword: {
-    color: "#bbb",
     alignSelf: "flex-end",
     marginBottom: 20,
   },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginBottom: 20,
-  },
-  createAccountButton: {
-    backgroundColor: "#4c3c90",
-    padding: 15,
-    borderRadius: 10,
-    flex: 1,
-    marginRight: 10,
-    alignItems: "center",
-  },
-  createAccountText: {
-    color: "white",
+  forgotPasswordText: {
+    color: "#bbb",
+    textDecorationLine: "underline",
   },
   loginButton: {
     backgroundColor: "#f15a29",
     padding: 15,
     borderRadius: 10,
-    flex: 1,
+    width: "100%",
     alignItems: "center",
+    marginVertical: 20,
   },
   loginText: {
     color: "white",
   },
-  orContinueWith: {
-    color: "#bbb",
-    marginVertical: 20,
+  registerText: {
+    color: "white",
+    textDecorationLine: "underline",
   },
-  socialButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "60%",
-    marginBottom: 20,
-  },
-  socialButton: {
-    backgroundColor: "#4c3c90",
-    padding: 10,
-    borderRadius: 10,
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "black",
     alignItems: "center",
-  },
-  socialIcon: {
-    width: 30,
-    height: 30,
   },
   footerText: {
     color: "#bbb",
-    textAlign: "center",
+    alignSelf: "center",
     paddingBottom: 10,
   },
 });

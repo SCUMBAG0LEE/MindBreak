@@ -1,21 +1,32 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { auth, db } from "./firebase"; // Adjust this import based on your firebase setup
+import { doc, getDoc } from "firebase/firestore";
 
 const Navbar = ({ active }) => {
   const navigation = useNavigation();
-  const [userData, setUserData] = useState(null);
-  const [pfpUrl, setPfpUrl] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
 
   useEffect(() => {
-    const initData = async () => {
-    setUserData(JSON.parse(await AsyncStorage.getItem("docsnap")));
-    setPfpUrl(await AsyncStorage.getItem("profileImage"));
-    }
-  
-    initData();
+    const fetchProfileImage = async () => {
+      try {
+        const userDocRef = doc(db, "users", auth.currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+
+        if (userDocSnap.exists()) {
+          const userData = userDocSnap.data();
+          setProfileImageUrl(userData.pfp || null); // Assuming "pfp" is the field name for profile picture URL
+        } else {
+          console.log("No such document!");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchProfileImage();
   }, []);
 
   return (
@@ -48,7 +59,7 @@ const Navbar = ({ active }) => {
           styles.navItem,
           active === "analytics" ? styles.activeItem : null,
         ]}
-        onPress={() => navigation.navigate("report")}
+        onPress={() => navigation.navigate("report", { score: null })}
       >
         <Image
           source={require("../assets/images/analytics.png")}
@@ -64,7 +75,11 @@ const Navbar = ({ active }) => {
         onPress={() => navigation.navigate("profile")}
       >
         <Image
-          source={{ uri: pfpUrl }}
+          source={
+            profileImageUrl
+              ? { uri: profileImageUrl }
+              : require("../assets/images/profile.png")
+          }
           style={styles.icon}
         />
         <Text style={styles.text}>Profile</Text>
@@ -78,7 +93,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    backgroundColor: "#4c3c90",
+    backgroundColor: "#14213D",
     height: 60,
   },
   navItem: {
@@ -89,14 +104,15 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     marginBottom: 5,
+    borderRadius: 12,
   },
   text: {
     color: "white",
     fontSize: 12,
   },
   activeItem: {
-    borderTopColor: "#f15a29",
-    borderTopWidth: 6, // Increased from 5 to 8
+    borderTopColor: "#FCA311",
+    borderTopWidth: 6, // Increased from 5 to 6
     paddingTop: 5, // Decreased from 10 to 5
   },
 });
