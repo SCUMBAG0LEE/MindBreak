@@ -15,30 +15,30 @@ import { useRouter } from "expo-router";
 
 const Landing = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load the sound
-  const soundObject = new Audio.Sound();
-  useEffect(() => {
-    const loadSoundAndStart = async () => {
-      try {
-        await soundObject.loadAsync(
-          require("../assets/sounds/apple startup sound iMac G3 and later.mp3")
-        );
-        await soundObject.playAsync();
-        // When the sound is done, set isLoading to false
-        soundObject.setOnPlaybackStatusUpdate((status) => {
-          if (status.didJustFinish) {
-            setIsLoading(false);
-          }
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    };
+  // // Load the sound
+  // const soundObject = new Audio.Sound();
+  // useEffect(() => {
+  //   const loadSoundAndStart = async () => {
+  //     try {
+  //       await soundObject.loadAsync(
+  //         require("../assets/sounds/apple startup sound iMac G3 and later.mp3")
+  //       );
+  //       await soundObject.playAsync();
+  //       // When the sound is done, set isLoading to false
+  //       soundObject.setOnPlaybackStatusUpdate((status) => {
+  //         if (status.didJustFinish) {
+  //           setIsLoading(false);
+  //         }
+  //       });
+  //     } catch (error) {
+  //       console.log(error);
+  //     }
+  //   };
 
-    loadSoundAndStart();
-  }, []);
+  //   loadSoundAndStart();
+  // }, []);
 
   if (isLoading) {
     return (

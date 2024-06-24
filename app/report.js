@@ -16,7 +16,15 @@ import Icon from "react-native-vector-icons/FontAwesome5";
 import Navbar from "./navbar";
 import { useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
-import { doc, getDoc, collection, addDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  getDocs,
+} from "firebase/firestore";
 import { db, auth } from "./firebase";
 
 const colors = {
@@ -30,7 +38,9 @@ const colors = {
   negativeColor: "#f15a29",
 };
 
-export default function Analytics() {
+const weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+const Analytics = () => {
   const [email, setEmail] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [interval, setInterval] = useState("Weekly");
@@ -45,60 +55,44 @@ export default function Analytics() {
   const route = useRoute();
   const [quizAttemptsPerDay, setQuizAttemptsPerDay] = useState([
     0, 0, 0, 0, 0, 0, 0,
-  ]); // Initialize with zero for each day
+  ]);
 
   useEffect(() => {
     const checkAuthentication = async () => {
       if (!auth.currentUser) {
-        // User is not authenticated, navigate to login screen
         router.push("/login");
       } else {
-        // User is authenticated, fetch user data as usual
-        try {
-          const userDocRef = doc(db, "users", auth.currentUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-
-          if (userDocSnap.exists()) {
-            const userData = userDocSnap.data();
-            setEmail(userData.email);
-            setUsername(userData.username || "");
-            setProfileImageUrl(userData.pfp || null);
-          } else {
-            console.log("No such document!");
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
+        fetchUserData();
       }
     };
 
     checkAuthentication();
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const userDocRef = doc(db, "users", auth.currentUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
+  const fetchUserData = async () => {
+    try {
+      const userDocRef = doc(db, "users", auth.currentUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-        if (userDocSnap.exists()) {
-          const userData = userDocSnap.data();
-          setEmail(userData.email);
-          setUsername(userData.username || "");
-          setProfileImageUrl(userData.pfp || null);
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        setEmail(userData.email);
+        setUsername(userData.username || "");
+        setProfileImageUrl(userData.pfp || null);
+      } else {
+        console.log("No such document!");
       }
-    };
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
-    fetchData();
+  useEffect(() => {
+    initializeData();
   }, []);
 
-  useEffect(() => {
-    const initializeData = async () => {
+  const initializeData = async () => {
+    try {
       const storedEmail = await AsyncStorage.getItem("email");
       if (storedEmail) setEmail(storedEmail);
 
@@ -108,11 +102,11 @@ export default function Analytics() {
       const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
       if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
 
-      loadScores(); // Load scores immediately on initialization
-    };
-
-    initializeData();
-  }, []);
+      loadScoresFromFirestore();
+    } catch (error) {
+      console.error("Error initializing data:", error);
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -152,43 +146,40 @@ export default function Analytics() {
   }, [totalTimeSpent]);
 
   useEffect(() => {
-    // Load scores when the component mounts or refreshes
-    loadScores();
+    loadScoresFromFirestore();
   }, []);
 
-  const loadScores = async () => {
+  const loadScoresFromFirestore = async () => {
     setRefreshing(true);
     try {
-      const storedScores = await AsyncStorage.getItem("quizScores");
-      if (storedScores) {
-        const parsedScores = JSON.parse(storedScores);
-        setQuizScores(parsedScores);
+      const quizScoresRef = collection(db, "quizScores");
+      const querySnapshot = await getDocs(
+        query(quizScoresRef, orderBy("timestamp", "desc"))
+      );
 
-        // Count quiz attempts per day
-        const attemptsPerDay = [0, 0, 0, 0, 0, 0, 0]; // Initialize array for current data load
-        parsedScores.forEach((score) => {
-          const date = new Date(score.timestamp);
-          const dayOfWeek = date.getDay(); // 0 (Sunday) through 6 (Saturday)
-          attemptsPerDay[dayOfWeek]++;
-        });
-        setQuizAttemptsPerDay(attemptsPerDay);
+      const scores = [];
 
-        // Save scores to Firebase immediately after loading
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
         const quizScoreData = {
-          timestamp: new Date(),
-          scores: parsedScores,
+          uid: auth.currentUser.uid,
+          timestamp: data.timestamp,
+          scores: data.scores,
         };
-        const quizScoresRef = collection(
-          db,
-          "users",
-          auth.currentUser.uid,
-          "quizScores"
-        );
-        await addDoc(quizScoresRef, quizScoreData);
-        console.log("Quiz scores saved to Firebase.");
-      }
+        scores.push(quizScoreData);
+      });
+
+      setQuizScores(scores);
+      console.log(scores);
+
+      // const attemptsPerDay = [0, 0, 0, 0, 0, 0, 0];
+      // scores.forEach((score) => {
+      //   const dayOfWeek = score.timestamp.getDay();
+      //   attemptsPerDay[dayOfWeek]++;
+      // });
+      // setQuizAttemptsPerDay(attemptsPerDay);
     } catch (error) {
-      console.error("Error loading scores:", error);
+      console.error("Error loading scores from Firestore:", error);
     } finally {
       setRefreshing(false);
     }
@@ -259,7 +250,10 @@ export default function Analytics() {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={loadScores} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={loadScoresFromFirestore}
+          />
         }
       >
         {!expanded ? (
@@ -267,12 +261,8 @@ export default function Analytics() {
             <Text style={styles.sectionTitle}>Quiz Statistics</Text>
             <BarChart
               data={{
-                labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], // Days of the week
-                datasets: [
-                  {
-                    data: quizAttemptsPerDay,
-                  },
-                ],
+                labels: weekdayLabels,
+                datasets: [{ data: quizAttemptsPerDay }],
               }}
               width={Dimensions.get("window").width - 40}
               height={220}
@@ -284,9 +274,7 @@ export default function Analytics() {
                 decimalPlaces: 0,
                 color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                  borderRadius: 16,
-                },
+                style: { borderRadius: 16 },
               }}
               style={styles.chartStyle}
             />
@@ -312,32 +300,34 @@ export default function Analytics() {
               <Icon name="chevron-left" size={20} color="white" />
             </TouchableOpacity>
             <Text style={styles.sectionTitle}>Detailed Report</Text>
-            {quizScores.map((score, index) => (
-              <View key={index} style={styles.reportCard}>
-                <Text style={styles.quizTitle}>{score.subjectName}</Text>
-                <Text
-                  style={[
-                    styles.quizScore,
-                    { color: getColorForScore(score.score) },
-                  ]}
-                >
-                  {(score.score / score.questionAmount) * 100}%
-                </Text>
-                <Text style={styles.quizDetails}>
-                  Correct answers: {score.score}/{score.questionAmount}
-                </Text>
-                <Text style={styles.quizDetails}>
-                  Incorrect/skipped: {score.questionAmount - score.score}
-                </Text>
-              </View>
-            ))}
+            {quizScores
+              .map((item) => item.scores)
+              .map((score, index) => (
+                <View key={index} style={styles.reportCard}>
+                  <Text style={styles.quizTitle}>{score.subjectName}</Text>
+                  <Text
+                    style={[
+                      styles.quizScore,
+                      { color: getColorForScore(score.score) },
+                    ]}
+                  >
+                    {(score.score / score.questionAmount) * 100}%
+                  </Text>
+                  <Text style={styles.quizDetails}>
+                    Correct answers: {score.score}/{score.questionAmount}
+                  </Text>
+                  <Text style={styles.quizDetails}>
+                    Incorrect/skipped: {score.questionAmount - score.score}
+                  </Text>
+                </View>
+              ))}
           </View>
         )}
       </ScrollView>
       <Navbar active="analytics" />
     </SafeAreaView>
   );
-}
+};
 
 const { width } = Dimensions.get("window");
 
@@ -471,3 +461,5 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 });
+
+export default Analytics;
