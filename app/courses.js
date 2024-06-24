@@ -17,12 +17,9 @@ import { useRouter } from "expo-router";
 export default function Courses() {
   const [email, setEmail] = useState("");
   const router = useRouter();
-<<<<<<< Updated upstream
-
-=======
   const navigation = useNavigation();
   const [pfpUrl, setPfpUrl] = useState(null);
->>>>>>> Stashed changes
+
   useEffect(() => {
     const initData = async () => {
       try {
