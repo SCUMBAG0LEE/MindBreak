@@ -152,7 +152,6 @@ export default function Courses() {
           <Text style={styles.title}>Courses</Text>
           <View style={styles.profileContainer}>
             <Text style={styles.username}>{username}</Text>
-            <Text style={styles.username}>{email}</Text>
 
             <TouchableOpacity onPress={handleAvatarPress}>
               <Image

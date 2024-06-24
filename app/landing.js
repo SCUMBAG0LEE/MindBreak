@@ -15,30 +15,29 @@ import { useRouter } from "expo-router";
 
 const Landing = () => {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // // Load the sound
-  // const soundObject = new Audio.Sound();
-  // useEffect(() => {
-  //   const loadSoundAndStart = async () => {
-  //     try {
-  //       await soundObject.loadAsync(
-  //         require("../assets/sounds/apple startup sound iMac G3 and later.mp3")
-  //       );
-  //       await soundObject.playAsync();
-  //       // When the sound is done, set isLoading to false
-  //       soundObject.setOnPlaybackStatusUpdate((status) => {
-  //         if (status.didJustFinish) {
-  //           setIsLoading(false);
-  //         }
-  //       });
-  //     } catch (error) {
-  //       console.log(error);
-  //     }
-  //   };
+  // Load the sound
+  const soundObject = new Audio.Sound();
+  useEffect(() => {
+    const loadSoundAndStart = async () => {
+      try {
+        await soundObject.loadAsync(
+          require("../assets/sounds/Windows 11 Startup Sound  OOBE Intro Video.mp3")
+        );
+        await soundObject.playAsync();
+        // Set a timeout for 3 seconds, then stop the sound and set isLoading to false
+        setTimeout(async () => {
+          await soundObject.stopAsync();
+          setIsLoading(false);
+        }, 5000); // 3000 milliseconds = 3 seconds
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-  //   loadSoundAndStart();
-  // }, []);
+    loadSoundAndStart();
+  }, []);
 
   if (isLoading) {
     return (

@@ -208,7 +208,7 @@ const Analytics = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerText}>Welcome, {username || email}!</Text>
+          <Text style={styles.headerText}>Welcome, {username || " "}!</Text>
           <Text style={styles.subHeaderText}>
             Let's see your progress today
           </Text>

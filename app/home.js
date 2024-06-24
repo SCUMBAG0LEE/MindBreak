@@ -164,8 +164,6 @@ export default function Home() {
                     style={styles.profileImage}
                   />
                 )}
-                <Text style={styles.usernameText}>Hello, {username}!</Text>
-                <Text style={styles.usernameText}>Hello, {email}!</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -252,8 +250,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   profileImage: {
-    width: 50,
-    height: 50,
+    width: 60,
+    height: 60,
     borderRadius: 25,
   },
   usernameText: {
