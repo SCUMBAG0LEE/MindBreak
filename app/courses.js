@@ -18,7 +18,6 @@ import { useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 import { doc, getDoc } from "firebase/firestore";
 import { db, auth } from "./firebase";
-import { ref, getDownloadURL } from "firebase/storage";
 
 export default function Courses() {
   const [email, setEmail] = useState("");

@@ -15,10 +15,10 @@ import {
   Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
+import { db, storage, auth } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
 import * as ImagePicker from "expo-image-picker";
 
 export default function Register() {
@@ -28,7 +28,6 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [imageUri, setImageUri] = useState(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false); // State to track keyboard visibility
-  const auth = getAuth();
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(

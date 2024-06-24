@@ -1,5 +1,5 @@
 // addScore.js
-import { doc, addDoc, collection } from "firebase/firestore";
+import { addDoc, collection } from "firebase/firestore";
 import { db, auth } from "./firebase";
 
 export const addScore = async (subjectName, score, questionAmount) => {
