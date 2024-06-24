@@ -15,27 +15,21 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-<<<<<<< Updated upstream
-=======
 import { doc, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase"; // Assuming you have imported your Firebase configuration correctly
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
->>>>>>> Stashed changes
 
 export default function Register() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-<<<<<<< Updated upstream
-=======
   const [confirmPassword, setConfirmPassword] = useState("");
   const [imageUri, setImageUri] = useState(null);
   const [secureTextEntry, setSecureTextEntry] = useState(true); // State to toggle secure text entry for password
   const [showConfirmPassword, setShowConfirmPassword] = useState(true); // State to toggle visibility of confirm password
   const [showUploadImage, setShowUploadImage] = useState(true);
->>>>>>> Stashed changes
 
   const auth = getAuth();
 
@@ -106,8 +100,6 @@ export default function Register() {
         password
       );
       const user = userCredential.user;
-<<<<<<< Updated upstream
-=======
 
       // Upload profile picture if imageUri is set
       let profileImageUrl = null;
@@ -122,7 +114,7 @@ export default function Register() {
         pfp: profileImageUrl,
       });
 
->>>>>>> Stashed changes
+
       Alert.alert("Registration successful", "You can now log in");
       router.push("/login");
     } catch (error) {
