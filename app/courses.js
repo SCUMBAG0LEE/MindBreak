@@ -37,7 +37,7 @@ export default function Courses() {
     const checkAuthentication = async () => {
       if (!auth.currentUser) {
         // User is not authenticated, navigate to login screen
-        navigation.navigate("Login");
+        navigation.navigate("login");
       } else {
         // User is authenticated, fetch user data as usual
         try {

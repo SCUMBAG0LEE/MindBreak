@@ -7,7 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
-  BackHandler
+  BackHandler,
 } from "react-native";
 import { ProgressBar } from "react-native-paper";
 import { fetchQuestions } from "../api";
@@ -33,30 +33,8 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
   const navigation = useNavigation();
   const percentScore = (score / questions.length) * 100;
 
-  // useEffect(() => {
-  //   const initialQuestions = [
-  //     {
-  //       question: "What is the capital of France?",
-  //       answers: ["London", "Paris", "Berlin", "Madrid"],
-  //       correctAnswerIndex: 1,
-  //     },
-  //     {
-  //       question: "What is the capital of Germany?",
-  //       answers: ["Vienna", "Berlin", "Zurich", "Munich"],
-  //       correctAnswerIndex: 1,
-  //     },
-  //     {
-  //       question: "What is the capital of Spain?",
-  //       answers: ["Barcelona", "Valencia", "Madrid", "Seville"],
-  //       correctAnswerIndex: 2,
-  //     }
-  //   ];
-  //   setQuestions(initialQuestions);
-  // }, []);
-
   useEffect(() => {
-    apiUrl =
-      "";
+    apiUrl = "";
     fetchQuestions(apiUrl)
       .then((fetchedQuestions) => {
         setQuestions(fetchedQuestions);
@@ -266,7 +244,10 @@ const QuizScreen = ({ questions, loading, error, subjectName }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
           <View style={styles.headerContainer}>
-            <TouchableOpacity style={styles.backButton} onPress={handleExitQuiz}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={handleExitQuiz}
+            >
               <Text style={styles.backButtonText}>Exit</Text>
             </TouchableOpacity>
             <View style={styles.progressContainer}>

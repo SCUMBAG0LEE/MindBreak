@@ -4,10 +4,14 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Image,
   StyleSheet,
+  Image,
+  Dimensions,
   Alert,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import {
@@ -25,6 +29,27 @@ export default function Login() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
+  const [keyboardOpen, setKeyboardOpen] = useState(false); // State to track keyboard visibility
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
+      () => {
+        setKeyboardOpen(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
+      () => {
+        setKeyboardOpen(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   useEffect(() => {
     const getEmail = async () => {
@@ -87,26 +112,43 @@ export default function Login() {
   if (isForgotPassword) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>Forgot Password</Text>
-        <TextInput
-          placeholder="Enter your email"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          value={resetEmail}
-          onChangeText={setResetEmail}
-        />
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={handleForgotPassword}
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingView}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <Text style={styles.loginText}>Send Reset Email</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.createAccountButton}
-          onPress={() => setIsForgotPassword(false)}
-        >
-          <Text style={styles.createAccountText}>Back to Login</Text>
-        </TouchableOpacity>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.content}>
+              <Text style={styles.title}>Forgot Password</Text>
+              <TextInput
+                placeholder="Enter your email"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                value={resetEmail}
+                onChangeText={setResetEmail}
+              />
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={handleForgotPassword}
+              >
+                <Text style={styles.resetText}>Send Reset Email</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => setIsForgotPassword(false)}
+              >
+                <Text style={styles.backButtonText}>Back to Login</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+        {/* Copyright Text */}
+        {!keyboardOpen && (
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              © All Right Reserved to de VSAUCE
+            </Text>
+          </View>
+        )}
       </View>
     );
   }
@@ -117,163 +159,171 @@ export default function Login() {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../assets/images/logo.png")}
-        style={styles.logo}
-      />
-      <Text style={styles.title}>Log in</Text>
-      <Text style={styles.subtitle}>Welcome back!</Text>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          placeholder="Password"
-          style={styles.input}
-          placeholderTextColor="#bbb"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-      </View>
-      <Text
-        style={styles.forgotPassword}
-        onPress={() => setIsForgotPassword(true)}
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        Forgot Password?
-      </Text>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.createAccountButton}
-          onPress={() => router.push("/register")}
-        >
-          <Text style={styles.createAccountText}>Create account</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginText}>Log in</Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/landing")}
+            >
+              <Text style={styles.backButtonText}>{"< Back"}</Text>
+            </TouchableOpacity>
+            <Image
+              source={require("../assets/images/logo.png")}
+              style={styles.logo}
+            />
+            <Text style={styles.title}>Login</Text>
+            <View style={styles.inputContainer}>
+              <TextInput
+                placeholder="Email"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+              />
+              <TextInput
+                placeholder="Password"
+                style={styles.input}
+                placeholderTextColor="#bbb"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+              />
+            </View>
+            <TouchableOpacity
+              style={styles.forgotPassword}
+              onPress={() => setIsForgotPassword(true)}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.loginText}>Login</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/register")}>
+              <Text style={styles.registerText}>
+                Don't have an account? Register
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+      {/* Copyright Text */}
+      {!keyboardOpen && (
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            © All Right Reserved to de VSAUCE
+          </Text>
+        </View>
+      )}
     </View>
   );
 }
+
+const { width, height } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "black",
     alignItems: "center",
-    padding: 20,
+    justifyContent: "center",
+    width: width,
+    height: height,
   },
-  centerContainer: {
+  keyboardAvoidingView: {
+    flex: 1,
+    width: "100%",
+  },
+  content: {
+    alignItems: "center",
+    padding: 20,
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "black",
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    padding: 10,
+    marginLeft: 10,
+    backgroundColor: "#f15a29",
+    borderRadius: 5,
+    position: "absolute",
+    top: 60,
+  },
+  backButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   logo: {
     width: 80,
     height: 80,
-    marginVertical: 40,
+    marginBottom: 20,
   },
   title: {
     color: "white",
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
-  },
-  subtitle: {
-    color: "#bbb",
-    fontSize: 16,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   inputContainer: {
     width: "100%",
     marginBottom: 20,
   },
   input: {
-    backgroundColor: "#2a2465",
+    backgroundColor: "#4c3c90",
     color: "white",
     borderRadius: 10,
     padding: 15,
     marginBottom: 10,
   },
-  forgotPassword: {
-    color: "#bbb",
-    alignSelf: "flex-end",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    marginBottom: 20,
-  },
-  createAccountButton: {
-    backgroundColor: "#2a2465",
+  resetButton: {
+    backgroundColor: "#f15a29",
     padding: 15,
     borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+    marginVertical: 20,
   },
-  createAccountText: {
+  resetText: {
     color: "white",
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 20,
+  },
+  forgotPasswordText: {
+    color: "#bbb",
+    textDecorationLine: "underline",
   },
   loginButton: {
     backgroundColor: "#f15a29",
     padding: 15,
     borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+    marginVertical: 20,
   },
   loginText: {
     color: "white",
   },
-  orContinueWith: {
-    color: "#bbb",
-    marginVertical: 20,
+  registerText: {
+    color: "white",
+    textDecorationLine: "underline",
   },
-  socialButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "60%",
-    marginBottom: 20,
-  },
-  socialButton: {
-    backgroundColor: "#2a2465",
-    padding: 10,
-    borderRadius: 10,
-  },
-  socialIcon: {
-    width: 30,
-    height: 30,
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "black",
+    alignItems: "center",
   },
   footerText: {
     color: "#bbb",
-    position: "absolute",
-    bottom: 20,
-  },
-  forgotPasswordContainer: {
-    width: "80%",
-    backgroundColor: "#1C1646",
-    borderRadius: 10,
-    padding: 20,
-    alignItems: "center",
-  },
-  resetButton: {
-    backgroundColor: "#f15a29",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  resetText: {
-    color: "white",
-  },
-  backButton: {
-    backgroundColor: "#f15a29",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 20,
-  },
-  backText: {
-    color: "white",
+    alignSelf: "center",
+    paddingBottom: 10,
   },
 });

@@ -16,10 +16,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Menu, Divider, Provider } from "react-native-paper";
 import Navbar from "./navbar";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db, storage, auth } from "./firebase";
-import { ref, uploadBytes, getDownloadURL, listAll } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useRouter } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
 
@@ -34,7 +35,8 @@ export default function Profile() {
   const [resetEmail, setResetEmail] = useState("");
   const [menuVisible, setMenuVisible] = useState(false);
   const [profileImageUrl, setProfileImageUrl] = useState(null);
-  const [loading, setLoading] = useState(false); // State for loading indicator
+  const [loading, setLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const navigation = useNavigation();
   const router = useRouter();
 
@@ -47,7 +49,7 @@ export default function Profile() {
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data();
           setEmail(userData.email);
-          setUsername(userData.username); // Assuming username is stored in Firestore
+          setUsername(userData.username);
           setAge(userData.age || "");
           setDob(userData.dob || "");
           setSchool(userData.school || "");
@@ -64,19 +66,10 @@ export default function Profile() {
     fetchData();
   }, []);
 
-  // Load data from AsyncStorage on mount
   useEffect(() => {
     const initializeData = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
       if (storedEmail) setEmail(storedEmail);
-
-      // const storedTime = await AsyncStorage.getItem("totalTimeSpent");
-      // if (storedTime) setTotalTimeSpent(parseInt(storedTime, 10));
-
-      // const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
-      // if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
-
-      // loadScores();
     };
 
     initializeData();
@@ -112,7 +105,7 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      await AsyncStorage.clear(); // Clear all AsyncStorage data
+      await AsyncStorage.clear();
       setEmail("");
       setUsername("");
       setAge("");
@@ -120,12 +113,11 @@ export default function Profile() {
       setSchool("");
       setGrade("");
       setProfileImageUrl(null);
-      // setImageUri(null);
       setLoading(false);
       setIsForgotPassword(false);
       setResetEmail("");
       setMenuVisible(false);
-      router.push("/login"); // Ensure proper navigation to login
+      router.push("/login");
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -147,7 +139,7 @@ export default function Profile() {
               const user = auth.currentUser;
               await user.delete();
               await AsyncStorage.removeItem("email");
-              router.push("/login"); // Navigate to login after deletion
+              router.push("/login");
             } catch (error) {
               console.error("Error deleting account:", error);
             }
@@ -191,7 +183,7 @@ export default function Profile() {
       });
 
       if (!result.canceled) {
-        setImageUri(result.uri);
+        setProfileImageUrl(result.uri);
         await handleProfilePictureUpload(result.uri);
       }
     } catch (error) {
@@ -227,6 +219,13 @@ export default function Profile() {
         "Upload failed",
         "An error occurred while uploading the profile picture. Please try again."
       );
+    }
+  };
+
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      setDob(selectedDate.toLocaleDateString());
     }
   };
 
@@ -347,13 +346,22 @@ export default function Profile() {
 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Date of Birth</Text>
-                <TextInput
-                  style={styles.detailItem}
-                  value={dob}
-                  onChangeText={setDob}
-                  placeholder="Date of Birth"
-                  placeholderTextColor="#bbb"
-                />
+                <TouchableOpacity
+                  style={styles.datePickerButton}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Text style={styles.datePickerText}>
+                    {dob || "Select Date"}
+                  </Text>
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={dob ? new Date(dob) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChange}
+                  />
+                )}
               </View>
 
               <View style={styles.inputContainer}>
@@ -466,6 +474,20 @@ const styles = StyleSheet.create({
     borderColor: "#bbb",
     borderRadius: 5,
     backgroundColor: "#2a2465",
+  },
+  datePickerButton: {
+    color: "white",
+    fontSize: 16,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#bbb",
+    borderRadius: 5,
+    backgroundColor: "#2a2465",
+    textAlign: "center",
+  },
+  datePickerText: {
+    color: "white",
+    textAlign: "center",
   },
   forgotPasswordContainer: {
     width: "100%",

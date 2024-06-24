@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -27,7 +27,28 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [imageUri, setImageUri] = useState(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false); // State to track keyboard visibility
   const auth = getAuth();
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      () => {
+        setKeyboardVisible(true);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -35,7 +56,7 @@ export default function Register() {
       quality: 1,
     });
 
-    if (!result.canceled) {
+    if (!result.cancelled) {
       if (result.assets && result.assets.length > 0) {
         const pickedImage = result.assets[0];
         setImageUri(pickedImage.uri);
@@ -127,7 +148,7 @@ export default function Register() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.content}>
             <TouchableOpacity
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: "#f15a29" }]}
               onPress={() => router.push("/login")}
             >
               <Text style={styles.backButtonText}>{"< Back"}</Text>
@@ -178,7 +199,9 @@ export default function Register() {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-      <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
+      {!keyboardVisible && (
+        <Text style={styles.footerText}>© All Right Reserved to de VSAUCE</Text>
+      )}
     </View>
   );
 }

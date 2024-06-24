@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/FontAwesome5";
 import Navbar from "./navbar";
 import { useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc } from "firebase/firestore";
 import { db, auth } from "./firebase";
 
 const colors = {
@@ -43,6 +43,9 @@ export default function Analytics() {
   const startTimeRef = useRef(new Date().getTime());
   const router = useRouter();
   const route = useRoute();
+  const [quizAttemptsPerDay, setQuizAttemptsPerDay] = useState([
+    0, 0, 0, 0, 0, 0, 0,
+  ]); // Initialize with zero for each day
 
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -72,7 +75,6 @@ export default function Analytics() {
     checkAuthentication();
   }, []);
 
-  // Load user data from Firebase on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -95,7 +97,6 @@ export default function Analytics() {
     fetchData();
   }, []);
 
-  // Load data from AsyncStorage on mount
   useEffect(() => {
     const initializeData = async () => {
       const storedEmail = await AsyncStorage.getItem("email");
@@ -107,13 +108,12 @@ export default function Analytics() {
       const storedLastResetDate = await AsyncStorage.getItem("lastResetDate");
       if (storedLastResetDate) setLastResetDate(new Date(storedLastResetDate));
 
-      loadScores();
+      loadScores(); // Load scores immediately on initialization
     };
 
     initializeData();
   }, []);
 
-  // Set up interval for updating time spent
   useEffect(() => {
     const timer = setInterval(() => {
       const currentTime = new Date().getTime();
@@ -121,7 +121,6 @@ export default function Analytics() {
       setTotalTimeSpent((prevTime) => prevTime + elapsedTime);
       startTimeRef.current = currentTime;
 
-      // Daily reset logic
       const now = new Date();
       if (lastResetDate) {
         const lastReset = new Date(lastResetDate);
@@ -138,12 +137,11 @@ export default function Analytics() {
       } else {
         setLastResetDate(now);
       }
-    }, 1000); // Update every second
+    }, 1000);
 
-    return () => clearInterval(timer); // Cleanup on component unmount
+    return () => clearInterval(timer);
   }, [lastResetDate]);
 
-  // Save total time spent to AsyncStorage whenever it changes
   useEffect(() => {
     const saveData = async () => {
       await AsyncStorage.setItem("totalTimeSpent", totalTimeSpent.toString());
@@ -153,12 +151,41 @@ export default function Analytics() {
     saveData();
   }, [totalTimeSpent]);
 
+  useEffect(() => {
+    // Load scores when the component mounts or refreshes
+    loadScores();
+  }, []);
+
   const loadScores = async () => {
     setRefreshing(true);
     try {
       const storedScores = await AsyncStorage.getItem("quizScores");
       if (storedScores) {
-        setQuizScores(JSON.parse(storedScores));
+        const parsedScores = JSON.parse(storedScores);
+        setQuizScores(parsedScores);
+
+        // Count quiz attempts per day
+        const attemptsPerDay = [0, 0, 0, 0, 0, 0, 0]; // Initialize array for current data load
+        parsedScores.forEach((score) => {
+          const date = new Date(score.timestamp);
+          const dayOfWeek = date.getDay(); // 0 (Sunday) through 6 (Saturday)
+          attemptsPerDay[dayOfWeek]++;
+        });
+        setQuizAttemptsPerDay(attemptsPerDay);
+
+        // Save scores to Firebase immediately after loading
+        const quizScoreData = {
+          timestamp: new Date(),
+          scores: parsedScores,
+        };
+        const quizScoresRef = collection(
+          db,
+          "users",
+          auth.currentUser.uid,
+          "quizScores"
+        );
+        await addDoc(quizScoresRef, quizScoreData);
+        console.log("Quiz scores saved to Firebase.");
       }
     } catch (error) {
       console.error("Error loading scores:", error);
@@ -167,47 +194,12 @@ export default function Analytics() {
     }
   };
 
-  function handleAvatarPress() {
+  const handleAvatarPress = () => {
     if (!auth.currentUser) {
       router.push("/login");
     } else {
       router.push("/profile");
     }
-  }
-
-  useEffect(() => {
-    generateRandomScores();
-  }, [interval]);
-
-  const generateRandomScores = () => {
-    const scores = [];
-    switch (interval) {
-      case "Weekly":
-        scores.push(generateRandomScore(), generateRandomScore());
-        break;
-      case "Monthly":
-        scores.push(
-          generateRandomScore(),
-          generateRandomScore(),
-          generateRandomScore()
-        );
-        break;
-      case "Yearly":
-        scores.push(
-          generateRandomScore(),
-          generateRandomScore(),
-          generateRandomScore(),
-          generateRandomScore()
-        );
-        break;
-      default:
-        scores.push(generateRandomScore(), generateRandomScore());
-        break;
-    }
-  };
-
-  const generateRandomScore = () => {
-    return Math.floor(Math.random() * 101);
   };
 
   const getColorForScore = (score) => {
@@ -218,12 +210,8 @@ export default function Analytics() {
     setExpanded(!expanded);
   };
 
-  const onRefresh = () => {
-    loadScores();
-  };
-
-  const formattedTime = Math.floor(totalTimeSpent / 60000); // Convert to minutes
-  const progressWidth = (formattedTime / 60) * 100; // Calculate percentage
+  const formattedTime = Math.floor(totalTimeSpent / 60000);
+  const progressWidth = (formattedTime / 60) * 100;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -271,7 +259,7 @@ export default function Analytics() {
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={loadScores} />
         }
       >
         {!expanded ? (
@@ -279,10 +267,10 @@ export default function Analytics() {
             <Text style={styles.sectionTitle}>Quiz Statistics</Text>
             <BarChart
               data={{
-                labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], // Days of the week
                 datasets: [
                   {
-                    data: quizScores.map((score) => score.score),
+                    data: quizAttemptsPerDay,
                   },
                 ],
               }}
@@ -467,22 +455,12 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: "bold",
     marginBottom: 10,
-    textAlign: "center", // Center text horizontally
+    textAlign: "center",
   },
   quizDetails: {
     color: "white",
     fontSize: 14,
-    textAlign: "center", // Center text horizontally
-  },
-  moreText: {
-    color: colors.activeButtonColor,
-    fontSize: 14,
-    marginTop: 10,
-  },
-  lessText: {
-    color: colors.activeButtonColor,
-    fontSize: 14,
-    marginTop: 10,
+    textAlign: "center",
   },
   backButton: {
     position: "absolute",

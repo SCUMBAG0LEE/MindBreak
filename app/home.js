@@ -42,7 +42,7 @@ export default function Home() {
       if (!auth.currentUser) {
         // User is not authenticated, navigate to login screen
         resetUserState();
-        navigation.navigate("Login");
+        navigation.navigate("login");
       } else {
         // User is authenticated, fetch user data as usual
         try {

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
+import { BackHandler } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Index() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -42,6 +45,23 @@ export default function Index() {
 
     calculateSessionDuration();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        if (!isLoggedIn) {
+          router.push("/landing");
+          return true;
+        }
+        return false;
+      };
+
+      BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+      return () =>
+        BackHandler.removeEventListener("hardwareBackPress", onBackPress);
+    }, [isLoggedIn])
+  );
 
   return isLoggedIn ? (
     <Redirect href="/home" sessionDuration={sessionDuration} />
