@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Audio } from "expo-av";
 import {
   StatusBar,
   Image,
@@ -7,12 +8,50 @@ import {
   StyleSheet,
   ScrollView,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 const Landing = () => {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load the sound
+  const soundObject = new Audio.Sound();
+  useEffect(() => {
+    const loadSoundAndStart = async () => {
+      try {
+        await soundObject.loadAsync(
+          require("../assets/sounds/apple startup sound iMac G3 and later.mp3")
+        );
+        await soundObject.playAsync();
+        // When the sound is done, set isLoading to false
+        soundObject.setOnPlaybackStatusUpdate((status) => {
+          if (status.didJustFinish) {
+            setIsLoading(false);
+          }
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    loadSoundAndStart();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Image
+          source={require("../assets/images/logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -64,6 +103,17 @@ const Landing = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#fff",
+    fontSize: 20,
+    marginTop: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: "#161622",
