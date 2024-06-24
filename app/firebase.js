@@ -8,7 +8,7 @@ import { Alert } from "react-native"; // Import Alert from react-native for show
 // Load the Google Services JSON file
 let googleServices;
 try {
-  googleServices = require("./google-services.json");
+  googleServices = require("../assets/google-services.json");
 } catch (error) {
   console.error("No google-services.json found:", error);
   Alert.alert(
